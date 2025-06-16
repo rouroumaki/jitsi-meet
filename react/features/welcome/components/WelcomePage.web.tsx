@@ -227,6 +227,9 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
                         <span className = 'header-text-subtitle'>
                             {t('welcomepage.headerSubtitle')}
                         </span>
+                        <span className = 'header-text-subtitle'>
+                            此路由为源码构建
+                        </span>
                         <div id = 'enter_room'>
                             <div className = 'join-meeting-container'>
                                 <div className = 'enter-room-input-container'>
