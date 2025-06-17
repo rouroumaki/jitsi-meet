@@ -30,28 +30,28 @@ var config = {
 
     hosts: {
         // XMPP domain.
-        domain: 'jitsi.kloud.cn',
+        domain: 'jitsi-meet.example.com',
 
         // When using authentication, domain for guest users.
         // anonymousdomain: 'guest.example.com',
 
         // Domain for authenticated users. Defaults to <domain>.
-        // authdomain: 'jitsi.kloud.cn',
+        // authdomain: 'jitsi-meet.example.com',
 
         // Focus component domain. Defaults to focus.<domain>.
-        // focus: 'focus.jitsi.kloud.cn',
+        // focus: 'focus.jitsi-meet.example.com',
 
         // XMPP MUC domain. FIXME: use XEP-0030 to discover it.
-        muc: 'conference.' + subdomain + 'jitsi.kloud.cn',
+        muc: 'conference.' + subdomain + 'jitsi-meet.example.com',
     },
 
     // BOSH URL. FIXME: use XEP-0156 to discover it.
-    bosh: 'https://jitsi.kloud.cn/' + subdir + 'http-bind',
+    bosh: 'https://jitsi-meet.example.com/' + subdir + 'http-bind',
 
     // Websocket URL (XMPP)
-    websocket: 'wss://jitsi.kloud.cn/' + subdir + 'xmpp-websocket',
+    websocket: 'wss://jitsi-meet.example.com/' + subdir + 'xmpp-websocket',
 
-    // websocketKeepAliveUrl: 'https://jitsi.kloud.cn/' + subdir + '_unlock',
+    // websocketKeepAliveUrl: 'https://jitsi-meet.example.com/' + subdir + '_unlock',
 
     // Whether BOSH should be preferred over WebSocket if both are configured.
     // preferBosh: false,
@@ -59,11 +59,11 @@ var config = {
     // The real JID of focus participant - can be overridden here
     // Do not change username - FIXME: Make focus username configurable
     // https://github.com/jitsi/jitsi-meet/issues/7376
-    // focusUserJid: 'focus@auth.jitsi.kloud.cn',
+    // focusUserJid: 'focus@auth.jitsi-meet.example.com',
 
     // Option to send conference requests to jicofo over http (requires nginx rule for it)
     // conferenceRequestUrl:
-    //   'https://<!--# echo var="http_host" default="jitsi.kloud.cn" -->/' + subdir + 'conference-request/v1',
+    //   'https://<!--# echo var="http_host" default="jitsi-meet.example.com" -->/' + subdir + 'conference-request/v1',
 
     // Options related to the bridge (colibri) data channel
     bridgeChannel: {
@@ -384,9 +384,9 @@ var config = {
     //     appKey: '<APP_KEY>', // Specify your app key here.
     //     // A URL to redirect the user to, after authenticating
     //     // by default uses:
-    //     // 'https://jitsi.kloud.cn/static/oauth.html'
+    //     // 'https://jitsi-meet.example.com/static/oauth.html'
     //     redirectURI:
-    //          'https://jitsi.kloud.cn/subfolder/static/oauth.html',
+    //          'https://jitsi-meet.example.com/subfolder/static/oauth.html',
     // },
 
     // configuration for all things recording related. Existing settings will be migrated here in the future.
@@ -1109,7 +1109,7 @@ var config = {
         // The STUN servers that will be used in the peer to peer connections
         stunServers: [
 
-            // { urls: 'stun:jitsi.kloud.cn:3478' },
+            // { urls: 'stun:jitsi-meet.example.com:3478' },
             { urls: 'stun:meet-jit-si-turnrelay.jitsi.net:443' },
         ],
     },
@@ -1486,7 +1486,7 @@ var config = {
     // The URL of the moderated rooms microservice, if available. If it
     // is present, a link to the service will be rendered on the welcome page,
     // otherwise the app doesn't render it.
-    // moderatedRoomServiceUrl: 'https://moderated.jitsi.kloud.cn',
+    // moderatedRoomServiceUrl: 'https://moderated.jitsi-meet.example.com',
 
     // If true, tile view will not be enabled automatically when the participants count threshold is reached.
     // disableTileView: true,
