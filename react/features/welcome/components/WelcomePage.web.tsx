@@ -222,13 +222,10 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
                             }
                         </div>
                         <h1 className = 'header-text-title'>
-                            {t('welcomepage.headerTitle')}
+                            Sync MT
                         </h1>
                         <span className = 'header-text-subtitle'>
                             {t('welcomepage.headerSubtitle')}
-                        </span>
-                        <span className = 'header-text-subtitle'>
-                            此路由为源码构建
                         </span>
                         <div id = 'enter_room'>
                             <div className = 'join-meeting-container'>
