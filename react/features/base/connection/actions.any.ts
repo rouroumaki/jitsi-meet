@@ -211,36 +211,38 @@ export function _connectInternal(id?: string, password?: string) {
         const { locationURL } = state["features/base/connection"];
         const { jwt } = state["features/base/jwt"];
 
-        const { room } = state["features/base/conference"];
-        const displayName = state["features/base/settings"].displayName;
-        const res = await fetch("https://wss.peertime.cn/MeetingServer/jitsi/generate_8x8_token", {
-            method: "POST",
-            headers: {
-                usertoken: "5aaa1c51-76e7-4627-b29f-1008738967c5",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                userId: displayName,
-            }),
-        });
-        const data = await res.json();
-        // const connection = new JitsiMeetJS.JitsiConnection(options.appId, jwt, options);
-        const connection = new JitsiMeetJS.JitsiConnection(
-            options.appId,
-            data.data,
-            {
-                serviceUrl: `wss://8x8.vc/vpaas-magic-cookie-5847075a531443faa105a2eec4bb8449/xmpp-websocket?room=${room}`,
-                hosts: {
-                    domain: `8x8.vc`,
-                    muc: `conference.vpaas-magic-cookie-5847075a531443faa105a2eec4bb8449.8x8.vc`,
-                },
-                focusUserJid: "focus@auth.8x8.vc",
-                xmppPing: {
-                    interval: 5000,
-                    threshold: 10,
-                },
-            }
-        );
+
+        const connection = new JitsiMeetJS.JitsiConnection(options.appId, jwt, options);
+
+        // const { room } = state["features/base/conference"];
+        // const displayName = state["features/base/settings"].displayName;
+        // const res = await fetch("https://wss.peertime.cn/MeetingServer/jitsi/generate_8x8_token", {
+        //     method: "POST",
+        //     headers: {
+        //         usertoken: "5aaa1c51-76e7-4627-b29f-1008738967c5",
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({
+        //         userId: displayName,
+        //     }),
+        // });
+        // const data = await res.json();
+        // const connection = new JitsiMeetJS.JitsiConnection(
+        //     options.appId,
+        //     data.data,
+        //     {
+        //         serviceUrl: `wss://8x8.vc/vpaas-magic-cookie-5847075a531443faa105a2eec4bb8449/xmpp-websocket?room=${room}`,
+        //         hosts: {
+        //             domain: `8x8.vc`,
+        //             muc: `conference.vpaas-magic-cookie-5847075a531443faa105a2eec4bb8449.8x8.vc`,
+        //         },
+        //         focusUserJid: "focus@auth.8x8.vc",
+        //         xmppPing: {
+        //             interval: 5000,
+        //             threshold: 10,
+        //         },
+        //     }
+        // );
 
         connection[JITSI_CONNECTION_URL_KEY] = locationURL;
 
