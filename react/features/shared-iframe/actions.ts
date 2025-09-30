@@ -35,13 +35,11 @@ export function startSharedIframe(url: string) {
             return;
         }
 
-        // 获取本地参与者信息
-        const userName = localParticipant?.name || localParticipant?.displayName || `用户_${Date.now()}`;
-        // 创建匿名会议账户
-        const token = await createOrUpdateInstantAccount(userName);
+        // 从本地获取登录令牌
+        const localToken = localStorage.getItem("KloudUserToken");
 
         const jitsiInstanceId = conference.sessionId;
-        const livedocInstanceId = await createLivedocInstance({ userToken: token, jitsiInstanceId });
+        const livedocInstanceId = await createLivedocInstance({ userToken: localToken || "", jitsiInstanceId });
 
         url = `https://kloud.cn/GoogleMeet/MainStage/${livedocInstanceId}/0`;
         // dispatch(
@@ -58,7 +56,7 @@ export function startSharedIframe(url: string) {
             localParticipantId: localParticipant?.id,
             status: SHARED_IFRAME_STATUSES.START,
             url,
-            token,
+            token: localToken || "",
         });
     };
 }

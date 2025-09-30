@@ -1,26 +1,30 @@
-import React from 'react';
-import { connect } from 'react-redux';
+import React from "react";
+import { connect } from "react-redux";
 
-import { isMobileBrowser } from '../../base/environment/utils';
-import { translate, translateToHTML } from '../../base/i18n/functions';
-import Icon from '../../base/icons/components/Icon';
-import { IconWarning } from '../../base/icons/svg';
-import Watermarks from '../../base/react/components/web/Watermarks';
-import getUnsafeRoomText from '../../base/util/getUnsafeRoomText.web';
-import CalendarList from '../../calendar-sync/components/CalendarList.web';
-import RecentList from '../../recent-list/components/RecentList.web';
-import SettingsButton from '../../settings/components/web/SettingsButton';
-import { SETTINGS_TABS } from '../../settings/constants';
+import { isMobileBrowser } from "../../base/environment/utils";
+import { translate, translateToHTML } from "../../base/i18n/functions";
+import Icon from "../../base/icons/components/Icon";
+import { IconWarning } from "../../base/icons/svg";
+import Watermarks from "../../base/react/components/web/Watermarks";
+import getUnsafeRoomText from "../../base/util/getUnsafeRoomText.web";
+import CalendarList from "../../calendar-sync/components/CalendarList.web";
+import RecentList from "../../recent-list/components/RecentList.web";
+import SettingsButton from "../../settings/components/web/SettingsButton";
+import { SETTINGS_TABS } from "../../settings/constants";
+import { openDialog } from "../../base/dialog/actions";
+import FrameModal from "../../base/ui/components/web/FrameModal";
+import KloudLoginContent from "../../authentication/components/web/KloudLoginContent";
+import Button from "../../base/ui/components/web/Button";
 
-import { AbstractWelcomePage, IProps, _mapStateToProps } from './AbstractWelcomePage';
-import Tabs from './Tabs';
+import { AbstractWelcomePage, IProps, _mapStateToProps } from "./AbstractWelcomePage";
+import Tabs from "./Tabs";
 
 /**
  * The pattern used to validate room name.
  *
  * @type {string}
  */
-export const ROOM_NAME_VALIDATE_PATTERN_STR = '^[^?&:\u0022\u0027%#]+$';
+export const ROOM_NAME_VALIDATE_PATTERN_STR = "^[^?&:\u0022\u0027%#]+$";
 
 /**
  * The Web container rendering the welcome page.
@@ -36,6 +40,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
     _additionalContentTemplate: HTMLTemplateElement | null;
     _additionalToolbarContentTemplate: HTMLTemplateElement | null;
     _titleHasNotAllowCharacter: boolean;
+    _kloudUserName?: string;
 
     /**
      * Default values for {@code WelcomePage} component's properties.
@@ -43,7 +48,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @static
      */
     static defaultProps = {
-        _room: ''
+        _room: "",
     };
 
     /**
@@ -58,17 +63,17 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         this.state = {
             ...this.state,
 
-            generateRoomNames:
-                interfaceConfig.GENERATE_ROOMNAMES_ON_WELCOME_PAGE
+            generateRoomNames: interfaceConfig.GENERATE_ROOMNAMES_ON_WELCOME_PAGE,
         };
 
         /**
-      * Used To display a warning massage if the title input has no allow character.
-      *
-      * @private
-      * @type {boolean}
-      */
+         * Used To display a warning massage if the title input has no allow character.
+         *
+         * @private
+         * @type {boolean}
+         */
         this._titleHasNotAllowCharacter = false;
+        this._kloudUserName = localStorage.getItem("KloudUserName") || undefined;
 
         /**
          * The HTML Element used as the container for additional content. Used
@@ -99,7 +104,8 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
          * @type {HTMLTemplateElement|null}
          */
         this._additionalCardTemplate = document.getElementById(
-            'welcome-page-additional-card-template') as HTMLTemplateElement;
+            "welcome-page-additional-card-template"
+        ) as HTMLTemplateElement;
 
         /**
          * The template to use as the main content for the welcome page. If
@@ -109,7 +115,8 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
          * @type {HTMLTemplateElement|null}
          */
         this._additionalContentTemplate = document.getElementById(
-            'welcome-page-additional-content-template') as HTMLTemplateElement;
+            "welcome-page-additional-content-template"
+        ) as HTMLTemplateElement;
 
         /**
          * The template to use as the additional content for the welcome page header toolbar.
@@ -119,19 +126,20 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
          * @type {HTMLTemplateElement|null}
          */
         this._additionalToolbarContentTemplate = document.getElementById(
-            'settings-toolbar-additional-content-template'
+            "settings-toolbar-additional-content-template"
         ) as HTMLTemplateElement;
 
         // Bind event handlers so they are only bound once per instance.
         this._onFormSubmit = this._onFormSubmit.bind(this);
         this._onRoomChange = this._onRoomChange.bind(this);
         this._setAdditionalCardRef = this._setAdditionalCardRef.bind(this);
-        this._setAdditionalContentRef
-            = this._setAdditionalContentRef.bind(this);
+        this._setAdditionalContentRef = this._setAdditionalContentRef.bind(this);
         this._setRoomInputRef = this._setRoomInputRef.bind(this);
-        this._setAdditionalToolbarContentRef
-            = this._setAdditionalToolbarContentRef.bind(this);
+        this._setAdditionalToolbarContentRef = this._setAdditionalToolbarContentRef.bind(this);
         this._renderFooter = this._renderFooter.bind(this);
+        this._onLogin = this._onLogin.bind(this);
+        this._onLogout = this._onLogout.bind(this);
+        this._onKloudLoginUpdated = this._onKloudLoginUpdated.bind(this);
     }
 
     /**
@@ -144,7 +152,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
     override componentDidMount() {
         super.componentDidMount();
 
-        document.body.classList.add('welcome-page');
+        document.body.classList.add("welcome-page");
         document.title = interfaceConfig.APP_NAME;
 
         if (this.state.generateRoomNames) {
@@ -152,8 +160,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         }
 
         if (this._shouldShowAdditionalContent()) {
-            this._additionalContentRef?.appendChild(
-                this._additionalContentTemplate?.content.cloneNode(true) as Node);
+            this._additionalContentRef?.appendChild(this._additionalContentTemplate?.content.cloneNode(true) as Node);
         }
 
         if (this._shouldShowAdditionalToolbarContent()) {
@@ -163,10 +170,10 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         }
 
         if (this._shouldShowAdditionalCard()) {
-            this._additionalCardRef?.appendChild(
-                this._additionalCardTemplate?.content.cloneNode(true) as Node
-            );
+            this._additionalCardRef?.appendChild(this._additionalCardTemplate?.content.cloneNode(true) as Node);
         }
+
+        window.addEventListener("kloud-login-updated", this._onKloudLoginUpdated as EventListener);
     }
 
     /**
@@ -178,7 +185,8 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
     override componentWillUnmount() {
         super.componentWillUnmount();
 
-        document.body.classList.remove('welcome-page');
+        document.body.classList.remove("welcome-page");
+        window.removeEventListener("kloud-login-updated", this._onKloudLoginUpdated as EventListener);
     }
 
     /**
@@ -193,115 +201,125 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         const showAdditionalCard = this._shouldShowAdditionalCard();
         const showAdditionalContent = this._shouldShowAdditionalContent();
         const showAdditionalToolbarContent = this._shouldShowAdditionalToolbarContent();
-        const contentClassName = showAdditionalContent ? 'with-content' : 'without-content';
-        const footerClassName = DISPLAY_WELCOME_FOOTER ? 'with-footer' : 'without-footer';
+        const contentClassName = showAdditionalContent ? "with-content" : "without-content";
+        const footerClassName = DISPLAY_WELCOME_FOOTER ? "with-footer" : "without-footer";
 
         return (
-            <div
-                className = { `welcome ${contentClassName} ${footerClassName}` }
-                id = 'welcome_page'>
-                <div className = 'header'>
-                    <div className = 'header-image' />
-                    <div className = 'header-container'>
-                        <div className = 'header-watermark-container'>
-                            <div className = 'welcome-watermark'>
-                                <Watermarks
-                                    defaultJitsiLogoURL = { DEFAULT_WELCOME_PAGE_LOGO_URL }
-                                    noMargins = { true } />
+            <div className={`welcome ${contentClassName} ${footerClassName}`} id="welcome_page">
+                <div className="header">
+                    <div className="header-image" />
+                    <div className="header-container">
+                        <div className="header-watermark-container">
+                            <div className="welcome-watermark">
+                                <Watermarks defaultJitsiLogoURL={DEFAULT_WELCOME_PAGE_LOGO_URL} noMargins={true} />
                             </div>
                         </div>
-                        <div className = 'welcome-page-settings'>
-                            <SettingsButton
-                                defaultTab = { SETTINGS_TABS.CALENDAR }
-                                isDisplayedOnWelcomePage = { true } />
-                            {showAdditionalToolbarContent
-                                ? <div
-                                    className = 'settings-toolbar-content'
-                                    ref = { this._setAdditionalToolbarContentRef } />
-                                : null
-                            }
+                        <div className="welcome-page-settings">
+                            <SettingsButton defaultTab={SETTINGS_TABS.CALENDAR} isDisplayedOnWelcomePage={true} />
+                            {showAdditionalToolbarContent ? (
+                                <div className="settings-toolbar-content" ref={this._setAdditionalToolbarContentRef} />
+                            ) : null}
                         </div>
-                        <h1 className = 'header-text-title'>
-                            Sync Meet
-                        </h1>
-                        <span className = 'header-text-subtitle'>
-                            {t('welcomepage.headerSubtitle')}
-                        </span>
-                        <div id = 'enter_room'>
-                            <div className = 'join-meeting-container'>
-                                <div className = 'enter-room-input-container'>
-                                    <form onSubmit = { this._onFormSubmit }>
+                        <h1 className="header-text-title">Sync Meet</h1>
+                        <span className="header-text-subtitle">{t("welcomepage.headerSubtitle")}</span>
+                        <div id="enter_room">
+                            <div className="join-meeting-container">
+                                <div className="enter-room-input-container">
+                                    <form onSubmit={this._onFormSubmit}>
                                         <input
-                                            aria-disabled = 'false'
-                                            aria-label = 'Meeting name input'
-                                            autoFocus = { true }
-                                            className = 'enter-room-input'
-                                            id = 'enter_room_field'
-                                            onChange = { this._onRoomChange }
-                                            pattern = { ROOM_NAME_VALIDATE_PATTERN_STR }
-                                            placeholder = { this.state.roomPlaceholder }
-                                            ref = { this._setRoomInputRef }
-                                            type = 'text'
-                                            value = { this.state.room } />
+                                            aria-disabled="false"
+                                            aria-label="Meeting name input"
+                                            autoFocus={true}
+                                            className="enter-room-input"
+                                            id="enter_room_field"
+                                            onChange={this._onRoomChange}
+                                            pattern={ROOM_NAME_VALIDATE_PATTERN_STR}
+                                            placeholder={this.state.roomPlaceholder}
+                                            ref={this._setRoomInputRef}
+                                            type="text"
+                                            value={this.state.room}
+                                        />
                                     </form>
                                 </div>
 
                                 <button
-                                    aria-disabled = 'false'
-                                    aria-label = 'Start meeting'
-                                    className = 'welcome-page-button'
-                                    id = 'enter_room_button'
-                                    onClick = { this._onFormSubmit }
-                                    tabIndex = { 0 }
-                                    type = 'button'>
-                                    {t('welcomepage.startMeeting')}
+                                    aria-disabled="false"
+                                    aria-label="Start meeting"
+                                    className="welcome-page-button"
+                                    id="enter_room_button"
+                                    onClick={this._onFormSubmit}
+                                    tabIndex={0}
+                                    type="button"
+                                >
+                                    {t("welcomepage.startMeeting")}
                                 </button>
                             </div>
                         </div>
                         {this._titleHasNotAllowCharacter && (
-                            <div
-                                className = 'not-allow-title-character-div'
-                                role = 'alert'>
-                                <Icon src = { IconWarning } />
-                                <span className = 'not-allow-title-character-text'>
-                                    {t('welcomepage.roomNameAllowedChars')}
+                            <div className="not-allow-title-character-div" role="alert">
+                                <Icon src={IconWarning} />
+                                <span className="not-allow-title-character-text">
+                                    {t("welcomepage.roomNameAllowedChars")}
                                 </span>
                             </div>
                         )}
                         {this._renderInsecureRoomNameWarning()}
 
                         {_moderatedRoomServiceUrl && (
-                            <div id = 'moderated-meetings'>
-                                {
-                                    translateToHTML(
-                                        t, 'welcomepage.moderatedMessage', { url: _moderatedRoomServiceUrl })
-                                }
-                            </div>)}
+                            <div id="moderated-meetings">
+                                {translateToHTML(t, "welcomepage.moderatedMessage", { url: _moderatedRoomServiceUrl })}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className = 'welcome-cards-container'>
-                    <div className = 'welcome-card-column'>
-                        <div className = 'welcome-tabs welcome-card welcome-card--blue'>
-                            {this._renderTabs()}
+                <div className="welcome-cards-container">
+                    <div className="welcome-card-column">
+                        <div className="login-wrapper" style={{ width: "100%" ,display: "flex", justifyContent: "flex-end"}}>
+                            <Button
+                                accessibilityLabel={this._kloudUserName ? "Logout Kloud" : "Login as Kloud user"}
+                                className="login-button"
+                                label={
+                                    this._kloudUserName ? `Logged in as ${this._kloudUserName}` : "Login as Kloud user"
+                                }
+                                onClick={this._kloudUserName ? this._onLogout : this._onLogin}
+                            />
                         </div>
-                        {showAdditionalCard
-                            ? <div
-                                className = 'welcome-card welcome-card--dark'
-                                ref = { this._setAdditionalCardRef } />
-                            : null}
+                        <div className="welcome-tabs welcome-card welcome-card--blue">{this._renderTabs()}</div>
+                        {showAdditionalCard ? (
+                            <div className="welcome-card welcome-card--dark" ref={this._setAdditionalCardRef} />
+                        ) : null}
                     </div>
 
-                    {showAdditionalContent
-                        ? <div
-                            className = 'welcome-page-content'
-                            ref = { this._setAdditionalContentRef } />
-                        : null}
+                    {showAdditionalContent ? (
+                        <div className="welcome-page-content" ref={this._setAdditionalContentRef} />
+                    ) : null}
                 </div>
                 {DISPLAY_WELCOME_FOOTER && this._renderFooter()}
             </div>
-
         );
+    }
+
+    _onLogin() {
+        this.props.dispatch(
+            openDialog(FrameModal, {
+                title: "Login",
+                size: "large",
+                children: <KloudLoginContent />,
+            })
+        );
+    }
+
+    _onLogout() {
+        localStorage.removeItem("KloudUserName");
+        localStorage.removeItem("KloudUserToken");
+        this._kloudUserName = undefined;
+        this.forceUpdate();
+    }
+
+    _onKloudLoginUpdated() {
+        this._kloudUserName = localStorage.getItem("KloudUserName") || undefined;
+        this.forceUpdate();
     }
 
     /**
@@ -311,11 +329,9 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      */
     override _doRenderInsecureRoomNameWarning() {
         return (
-            <div className = 'insecure-room-name-warning'>
-                <Icon src = { IconWarning } />
-                <span>
-                    {getUnsafeRoomText(this.props.t, 'welcome')}
-                </span>
+            <div className="insecure-room-name-warning">
+                <Icon src={IconWarning} />
+                <span>{getUnsafeRoomText(this.props.t, "welcome")}</span>
             </div>
         );
     }
@@ -348,9 +364,9 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
     // @ts-ignore
     // eslint-disable-next-line require-jsdoc
     _onRoomChange(event: React.ChangeEvent<HTMLInputElement>) {
-        const specialCharacters = [ '?', '&', ':', '\'', '"', '%', '#', '.' ];
+        const specialCharacters = ["?", "&", ":", "'", '"', "%", "#", "."];
 
-        this._titleHasNotAllowCharacter = specialCharacters.some(char => event.target.value.includes(char));
+        this._titleHasNotAllowCharacter = specialCharacters.some((char) => event.target.value.includes(char));
         super._onRoomChange(event.target.value);
     }
 
@@ -366,51 +382,48 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
                 ios = { downloadLink: undefined },
                 android = {
                     fDroidUrl: undefined,
-                    downloadLink: undefined
-                }
-            }
+                    downloadLink: undefined,
+                },
+            },
         } = this.props;
 
         const { downloadLink: iosDownloadLink } = ios;
 
         const { fDroidUrl, downloadLink: androidDownloadLink } = android;
 
-        return (<footer className = 'welcome-footer'>
-            <div className = 'welcome-footer-centered'>
-                <div className = 'welcome-footer-padded'>
-                    <div className = 'welcome-footer-row-block welcome-footer--row-1'>
-                        <div className = 'welcome-footer-row-1-text'>{t('welcomepage.jitsiOnMobile')}</div>
-                        <a
-                            className = 'welcome-badge'
-                            href = { iosDownloadLink }
-                            rel = 'noopener noreferrer'
-                            target = '_blank'>
-                            <img
-                                alt = { t('welcomepage.mobileDownLoadLinkIos') }
-                                src = './images/app-store-badge.png' />
-                        </a>
-                        <a
-                            className = 'welcome-badge'
-                            href = { androidDownloadLink }
-                            rel = 'noopener noreferrer'
-                            target = '_blank'>
-                            <img
-                                alt = { t('welcomepage.mobileDownLoadLinkAndroid') }
-                                src = './images/google-play-badge.png' />
-                        </a>
-                        <a
-                            className = 'welcome-badge'
-                            href = { fDroidUrl }
-                            rel = 'noopener noreferrer'
-                            target = '_blank'>
-                            <img
-                                alt = { t('welcomepage.mobileDownLoadLinkFDroid') }
-                                src = './images/f-droid-badge.png' />
-                        </a>
+        return (
+            <footer className="welcome-footer">
+                <div className="welcome-footer-centered">
+                    <div className="welcome-footer-padded">
+                        <div className="welcome-footer-row-block welcome-footer--row-1">
+                            <div className="welcome-footer-row-1-text">{t("welcomepage.jitsiOnMobile")}</div>
+                            <a
+                                className="welcome-badge"
+                                href={iosDownloadLink}
+                                rel="noopener noreferrer"
+                                target="_blank"
+                            >
+                                <img alt={t("welcomepage.mobileDownLoadLinkIos")} src="./images/app-store-badge.png" />
+                            </a>
+                            <a
+                                className="welcome-badge"
+                                href={androidDownloadLink}
+                                rel="noopener noreferrer"
+                                target="_blank"
+                            >
+                                <img
+                                    alt={t("welcomepage.mobileDownLoadLinkAndroid")}
+                                    src="./images/google-play-badge.png"
+                                />
+                            </a>
+                            <a className="welcome-badge" href={fDroidUrl} rel="noopener noreferrer" target="_blank">
+                                <img alt={t("welcomepage.mobileDownLoadLinkFDroid")} src="./images/f-droid-badge.png" />
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </footer>);
+            </footer>
+        );
     }
 
     /**
@@ -430,17 +443,17 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
 
         if (_calendarEnabled) {
             tabs.push({
-                id: 'calendar',
-                label: t('welcomepage.upcomingMeetings'),
-                content: <CalendarList />
+                id: "calendar",
+                label: t("welcomepage.upcomingMeetings"),
+                content: <CalendarList />,
             });
         }
 
         if (_recentListEnabled) {
             tabs.push({
-                id: 'recent',
-                label: t('welcomepage.recentMeetings'),
-                content: <RecentList />
+                id: "recent",
+                label: t("welcomepage.recentMeetings"),
+                content: <RecentList />,
             });
         }
 
@@ -448,11 +461,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
             return null;
         }
 
-        return (
-            <Tabs
-                accessibilityLabel = { t('welcomepage.meetingsAccessibilityLabel') }
-                tabs = { tabs } />
-        );
+        return <Tabs accessibilityLabel={t("welcomepage.meetingsAccessibilityLabel")} tabs={tabs} />;
     }
 
     /**
@@ -513,9 +522,11 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @returns {boolean}
      */
     _shouldShowAdditionalCard() {
-        return interfaceConfig.DISPLAY_WELCOME_PAGE_ADDITIONAL_CARD
-            && this._additionalCardTemplate?.content
-            && this._additionalCardTemplate?.innerHTML?.trim();
+        return (
+            interfaceConfig.DISPLAY_WELCOME_PAGE_ADDITIONAL_CARD &&
+            this._additionalCardTemplate?.content &&
+            this._additionalCardTemplate?.innerHTML?.trim()
+        );
     }
 
     /**
@@ -526,9 +537,11 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @returns {boolean}
      */
     _shouldShowAdditionalContent() {
-        return interfaceConfig.DISPLAY_WELCOME_PAGE_CONTENT
-            && this._additionalContentTemplate?.content
-            && this._additionalContentTemplate?.innerHTML?.trim();
+        return (
+            interfaceConfig.DISPLAY_WELCOME_PAGE_CONTENT &&
+            this._additionalContentTemplate?.content &&
+            this._additionalContentTemplate?.innerHTML?.trim()
+        );
     }
 
     /**
@@ -539,9 +552,11 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @returns {boolean}
      */
     _shouldShowAdditionalToolbarContent() {
-        return interfaceConfig.DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT
-            && this._additionalToolbarContentTemplate?.content
-            && this._additionalToolbarContentTemplate?.innerHTML.trim();
+        return (
+            interfaceConfig.DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT &&
+            this._additionalToolbarContentTemplate?.content &&
+            this._additionalToolbarContentTemplate?.innerHTML.trim()
+        );
     }
 }
 
