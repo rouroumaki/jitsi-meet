@@ -1,9 +1,11 @@
 import { batch } from 'react-redux';
 import { AnyAction } from 'redux';
 
+import { IReduxState } from '../app/types';
 import { OVERWRITE_CONFIG, SET_CONFIG, UPDATE_CONFIG } from '../base/config/actionTypes';
 import { NotifyClickButton } from '../base/config/configType';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
+import { iAmVisitor } from '../visitors/functions';
 import { I_AM_VISITOR_MODE } from '../visitors/actionTypes';
 
 import {
@@ -15,9 +17,9 @@ import {
     SET_TOOLBOX_TIMEOUT
 } from './actionTypes';
 import { setMainToolbarThresholds } from './actions.web';
-import { THRESHOLDS, TOOLBAR_BUTTONS } from './constants';
+import { THRESHOLDS, TOOLBAR_BUTTONS, VISITORS_MODE_BUTTONS } from './constants';
 import { getToolbarButtons } from './functions.web';
-import { NOTIFY_CLICK_MODE } from './types';
+import { NOTIFY_CLICK_MODE, ToolbarButton } from './types';
 
 import './subscriber.web';
 
@@ -131,8 +133,8 @@ function _setFullScreen(next: Function, action: AnyAction) {
 
     if (typeof document.exitFullscreen === 'function') {
         document.exitFullscreen();
-    } else if (typeof document.webkitExitFullscreen === 'function') {
-        document.webkitExitFullscreen();
+    } else if (typeof (document as any).webkitExitFullscreen === 'function') {
+        (document as any).webkitExitFullscreen();
     }
 
     return result;
@@ -169,4 +171,31 @@ function _buildButtonsArray(
         });
 
     return new Map([ ...customButtonsWithNotifyClick, ...buttons ]);
+}
+
+/**
+ * Returns the list of enabled toolbar buttons.
+ *
+ * @param {Object} state - The redux state.
+ * @returns {Array<string>} - The list of enabled toolbar buttons.
+ */
+function _getToolbarButtons(state: IReduxState): Array<string> {
+    const { toolbarButtons, customToolbarButtons } = state['features/base/config'];
+    const customButtons = customToolbarButtons?.map(({ id }) => id);
+    let buttons = Array.isArray(toolbarButtons) ? toolbarButtons : TOOLBAR_BUTTONS;
+
+    if (iAmVisitor(state)) {
+        buttons = VISITORS_MODE_BUTTONS.filter((button: ToolbarButton) => buttons.indexOf(button) > -1);
+    }
+
+    // Force-add sharediframe button locally to avoid depending on remote config
+    if (!buttons.includes('sharediframe')) {
+        buttons = [ ...buttons, 'sharediframe' ];
+    }
+
+    if (customButtons) {
+        return [ ...buttons, ...customButtons ];
+    }
+
+    return buttons;
 }

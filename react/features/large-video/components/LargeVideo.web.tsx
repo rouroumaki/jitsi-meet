@@ -16,6 +16,7 @@ import StageParticipantNameLabel from '../../display-name/components/web/StagePa
 import { FILMSTRIP_BREAKPOINT } from '../../filmstrip/constants';
 import { getVerticalViewMaxWidth, isFilmstripResizable } from '../../filmstrip/functions.web';
 import SharedVideo from '../../shared-video/components/web/SharedVideo';
+import SharedIframe from '../../shared-iframe/components/web/SharedIframe';
 import Captions from '../../subtitles/components/web/Captions';
 import { areClosedCaptionsEnabled } from '../../subtitles/functions.any';
 import { setTileView } from '../../video-layout/actions.web';
@@ -218,6 +219,7 @@ class LargeVideo extends Component<IProps> {
                 ref = { this._containerRef }
                 style = { style }>
                 <SharedVideo />
+                <SharedIframe />
                 {_whiteboardEnabled && <Whiteboard />}
                 <div id = 'etherpad' />
 
