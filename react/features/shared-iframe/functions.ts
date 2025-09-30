@@ -91,6 +91,7 @@ export async function createLivedocInstance({
             },
             body: JSON.stringify({
                 jitsiInstanceId: jitsiInstanceId,
+                companyId: 3255
             }),
         });
 
