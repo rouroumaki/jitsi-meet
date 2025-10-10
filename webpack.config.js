@@ -157,7 +157,8 @@ function getConfig(options = {}) {
                 test: /\.css$/,
                 use: [
                     'style-loader',
-                    'css-loader'
+                    'css-loader',
+                    'postcss-loader'
                 ]
             }, {
                 test: /\.svg$/,

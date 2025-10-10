@@ -1203,7 +1203,6 @@ class Thumbnail extends Component<IProps, IState> {
                     classes = { classes }
                     containerClassName = { this._getContainerClassName() }
                     isHovered = { isHovered }
-                    isLocal = { false }
                     isMobile = { _isMobile }
                     onClick = { this._onClick }
                     onMouseEnter = { this._onMouseEnter }
@@ -1213,7 +1212,6 @@ class Thumbnail extends Component<IProps, IState> {
                     onTouchMove = { this._onTouchMove }
                     onTouchStart = { this._onTouchStart }
                     participantId = { _participant.id }
-                    shouldDisplayTintBackground = { _shouldDisplayTintBackground }
                     styles = { this._getStyles() }
                     thumbnailType = { _thumbnailType } />
             );

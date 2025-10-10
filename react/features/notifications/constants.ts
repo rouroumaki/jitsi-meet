@@ -128,3 +128,10 @@ export const SILENT_JOIN_THRESHOLD = 30;
  * Amount of participants beyond which no left notification will be emitted.
  */
 export const SILENT_LEFT_THRESHOLD = 30;
+
+/**
+ * The identifier of the loading notification.
+ *
+ * @type {string}
+ */
+export const LOADING_NOTIFICATION_ID = 'LOADING_NOTIFICATION_ID';

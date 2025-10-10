@@ -3,6 +3,7 @@ import { participantJoined, participantLeft, pinParticipant } from '../base/part
 import { getLocalParticipant } from '../base/participants/functions';
 import { FakeParticipant } from '../base/participants/types';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
+import { hideLoadingNotification, showLoadingNotification } from '../notifications/actions';
 
 import { resetSharedIframeState, setSharedIframeState } from './actions';
 import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
@@ -33,59 +34,70 @@ MiddlewareRegistry.register(store => next => action => {
 
                         if (status === SHARED_IFRAME_STATUSES.STOP) {
                             // Remove the iframe participant when stopping
-                            dispatch(participantLeft(currentUrl ?? '', conference, {
-                                fakeParticipant: FakeParticipant.SharedIframe
-                            }));
+                            // dispatch(participantLeft(currentUrl ?? '', conference, {
+                            //     fakeParticipant: FakeParticipant.SharedIframe
+                            // }));
                             dispatch(resetSharedIframeState());
 
                             return;
                         }
 
-                        const localParticipant = getLocalParticipant(getState());
+                        // // 显示 loading notification
+                        // dispatch(showLoadingNotification({
+                        //     title: 'Loading LiveDoc share, please wait ',
+                        // }));
 
-                        let url = value;
+                        try {
 
-                        if (ownerId === localParticipant?.id) {
-                            url = url + `?token=${token}`;
-                        } else {
-                            // 从本地获取登录令牌
-                            const localToken = localStorage.getItem('KloudUserToken');
+                            const localParticipant = getLocalParticipant(getState());
 
-                            if (localToken) {
-                                url = url + `?token=${localToken}`;
+                            let url = value;
+
+                            if (ownerId === localParticipant?.id) {
+                                url = url + `?token=${token}`;
                             } else {
-                                const anonymousToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+                                // 从本地获取登录令牌
+                                const localToken = localStorage.getItem('KloudUserToken');
 
-                                url = url + `?token=${anonymousToken}`;
+                                if (localToken) {
+                                    url = url + `?token=${localToken}`;
+                                } else {
+                                    const anonymousToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+
+                                    url = url + `?token=${anonymousToken}`;
+                                }
                             }
+
+                            // // If this is a new iframe or the URL changed, create a new participant
+                            // if (!currentUrl || currentUrl !== url) {
+                            //     dispatch(participantJoined({
+                            //         conference,
+                            //         fakeParticipant: FakeParticipant.SharedIframe,
+                            //         id: url,
+                            //         name: 'Shared Iframe'
+                            //     }));
+
+                            //     // Pin the iframe participant to the stage
+                            //     dispatch(pinParticipant(url));
+                            // }
+
+                            dispatch(
+                                setSharedIframeState({
+                                    status,
+                                    ownerId,
+                                    url,
+                                })
+                            );
+                        } finally {
+                            // dispatch(hideLoadingNotification());
                         }
-
-                        // If this is a new iframe or the URL changed, create a new participant
-                        if (!currentUrl || currentUrl !== url) {
-                            dispatch(participantJoined({
-                                conference,
-                                fakeParticipant: FakeParticipant.SharedIframe,
-                                id: url,
-                                name: 'Shared Iframe'
-                            }));
-
-                            // Pin the iframe participant to the stage
-                            dispatch(pinParticipant(url));
-                        }
-
-                        dispatch(
-                            setSharedIframeState({
-                                status,
-                                ownerId,
-                                url,
-                            })
-                        );
                     }
         );
         break;
     }
     case CONFERENCE_LEFT: {
         dispatch(resetSharedIframeState());
+        dispatch(hideLoadingNotification());
         break;
     }
     }

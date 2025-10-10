@@ -12,11 +12,6 @@ import ThumbnailTopIndicators from './ThumbnailTopIndicators';
 interface IProps {
 
     /**
-     * Indicates whether the thumbnail is for local shared iframe or not.
-     */
-    _isLocal: boolean;
-
-    /**
      * An object containing the CSS classes.
      */
     classes?: Partial<Record<
@@ -98,7 +93,6 @@ const VirtualSharedIframeParticipant = ({
     classes,
     containerClassName,
     isHovered,
-    _isLocal,
     isMobile,
     onClick,
     onMouseEnter,

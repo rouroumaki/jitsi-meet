@@ -11,6 +11,7 @@ TFLITE_WASM = react/features/stream-effects/virtual-background/vendor/tflite
 MEET_MODELS_DIR  = react/features/stream-effects/virtual-background/vendor/models
 FACE_MODELS_DIR = node_modules/@vladmandic/human-models/models
 NODE_SASS = ./node_modules/.bin/sass
+POSTCSS = ./node_modules/.bin/postcss
 NPM = npm
 OUTPUT_DIR = .
 STYLES_BUNDLE = css/all.bundle.css
@@ -110,6 +111,7 @@ deploy-face-landmarks:
 
 deploy-css:
 	$(NODE_SASS) $(STYLES_MAIN) $(STYLES_BUNDLE) && \
+	$(POSTCSS) $(STYLES_BUNDLE) --config ./postcss.config.js --output $(STYLES_BUNDLE) && \
 	$(CLEANCSS) --skip-rebase $(STYLES_BUNDLE) > $(STYLES_DESTINATION) && \
 	rm $(STYLES_BUNDLE)
 

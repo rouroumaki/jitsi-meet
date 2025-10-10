@@ -4,6 +4,7 @@ import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState, IStore } from '../../../app/types';
 import { hideNotification } from '../../actions';
+import { LOADING_NOTIFICATION_ID } from '../../constants';
 import { areThereNotifications } from '../../functions';
 import { INotificationProps } from '../../types';
 import NotificationsTransition from '../NotificationsTransition';
@@ -107,10 +108,15 @@ function _mapStateToProps(state: IReduxState) {
     const { isOpen: isChatOpen } = state['features/chat'];
     const _visible = areThereNotifications(state);
 
+    // 过滤掉 loading notification，因为它有专门的容器显示
+    const filteredNotifications = _visible
+        ? notifications.filter(notification => notification.uid !== LOADING_NOTIFICATION_ID)
+        : [];
+
     return {
         _iAmSipGateway: Boolean(iAmSipGateway),
         _isChatOpen: isChatOpen,
-        _notifications: _visible ? notifications : []
+        _notifications: filteredNotifications
     };
 }
 

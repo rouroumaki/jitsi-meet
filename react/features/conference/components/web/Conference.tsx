@@ -23,6 +23,7 @@ import LargeVideo from '../../../large-video/components/LargeVideo.web';
 import LobbyScreen from '../../../lobby/components/web/LobbyScreen';
 import { getIsLobbyVisible } from '../../../lobby/functions';
 import { getOverlayToRender } from '../../../overlay/functions.web';
+import LoadingNotificationContainer from '../../../notifications/components/web/LoadingNotificationContainer';
 import ParticipantsPane from '../../../participants-pane/components/web/ParticipantsPane';
 import Prejoin from '../../../prejoin/components/web/Prejoin';
 import { isPrejoinPageVisible } from '../../../prejoin/functions.web';
@@ -277,6 +278,8 @@ class Conference extends AbstractConference<IProps, any> {
                         </JitsiPortal>
                         : this.renderNotificationsContainer())
                     }
+
+                    <LoadingNotificationContainer />
 
                     <CalleeInfoContainer />
 

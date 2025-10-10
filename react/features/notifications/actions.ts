@@ -13,6 +13,7 @@ import {
     SHOW_NOTIFICATION
 } from './actionTypes';
 import {
+    LOADING_NOTIFICATION_ID,
     NOTIFICATION_ICON,
     NOTIFICATION_TIMEOUT,
     NOTIFICATION_TIMEOUT_TYPE,
@@ -343,4 +344,28 @@ export function showParticipantLeftNotification(displayName: string) {
 
     return (dispatch: IStore['dispatch'], getState: IStore['getState']) =>
         _throttledNotifyParticipantLeft(dispatch, getState);
+}
+
+/**
+ * Shows a loading notification in the top-left corner.
+ *
+ * @param {Object} props - The props needed to show the loading notification.
+ * @returns {Function}
+ */
+export function showLoadingNotification(props: INotificationProps = {}) {
+    return showNotification({
+        ...props,
+        uid: LOADING_NOTIFICATION_ID,
+        appearance: NOTIFICATION_TYPE.NORMAL,
+        disableClosing: true
+    }, NOTIFICATION_TIMEOUT_TYPE.STICKY);
+}
+
+/**
+ * Hides the loading notification.
+ *
+ * @returns {Function}
+ */
+export function hideLoadingNotification() {
+    return hideNotification(LOADING_NOTIFICATION_ID);
 }

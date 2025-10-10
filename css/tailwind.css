@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义 Tailwind 组件 */
+@layer components {
+  .btn-primary {
+    @apply bg-jitsi-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-jitsi-gray text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors;
+  }
+  
+  .btn-success {
+    @apply bg-jitsi-green text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors;
+  }
+  
+  .btn-danger {
+    @apply bg-jitsi-red text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-jitsi-blue focus:border-transparent;
+  }
+}
+
+/* 自定义 Tailwind 工具类 */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.10);
+  }
+  
+  .text-shadow-md {
+    text-shadow: 0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
+  }
+  
+  .text-shadow-lg {
+    text-shadow: 0 15px 35px rgba(0,0,0,0.12), 0 5px 15px rgba(0,0,0,0.07);
+  }
+  
+  .text-shadow-none {
+    text-shadow: none;
+  }
+}

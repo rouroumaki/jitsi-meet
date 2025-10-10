@@ -1,5 +1,9 @@
+/* eslint-disable */
 import React from "react";
 import { connect } from "react-redux";
+
+// 声明全局变量
+declare const interfaceConfig: any;
 
 import { isMobileBrowser } from "../../base/environment/utils";
 import { translate, translateToHTML } from "../../base/i18n/functions";
@@ -275,7 +279,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
 
                 <div className="welcome-cards-container">
                     <div className="welcome-card-column">
-                        <div className="login-wrapper" style={{ width: "100%" ,display: "flex", justifyContent: "flex-end"}}>
+                        <div className="login-wrapper" style={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
                             <Button
                                 accessibilityLabel={this._kloudUserName ? "Logout Kloud" : "Login as Kloud user"}
                                 className="login-button"
@@ -439,7 +443,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
 
         const { _calendarEnabled, _recentListEnabled, t } = this.props;
 
-        const tabs = [];
+        const tabs: Array<{id: string; label: string; content: JSX.Element}> = [];
 
         if (_calendarEnabled) {
             tabs.push({
