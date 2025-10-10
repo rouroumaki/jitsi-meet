@@ -1113,6 +1113,7 @@
         "uploadToCloud": "Upload to the cloud"
     },
     "screenshareDisplayName": "{{name}}'s screen",
+    "sharedIframeDisplayName": "{{name}}'s Live Doc",
     "sectionList": {
         "pullToRefresh": "Pull to refresh"
     },
@@ -1514,6 +1515,7 @@
         "pinToStage": "Pin to stage",
         "remoteControl": "Start / Stop remote control",
         "screenSharing": "Participant is sharing their screen",
+        "sharedIframe": "Participant is sharing a Live Doc",
         "show": "Show on stage",
         "showSelfView": "Show self view",
         "unpinFromStage": "Unpin",

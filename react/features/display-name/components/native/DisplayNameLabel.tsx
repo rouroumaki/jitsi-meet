@@ -6,7 +6,8 @@ import { IReduxState } from '../../../app/types';
 import {
     getParticipantById,
     getParticipantDisplayName,
-    isScreenShareParticipant
+    isScreenShareParticipant,
+    isSharedIframeParticipant
 } from '../../../base/participants/functions';
 
 import styles from './styles';
@@ -75,7 +76,7 @@ function _mapStateToProps(state: IReduxState, ownProps: Partial<IProps>) {
     return {
         _participantName: getParticipantDisplayName(state, ownProps.participantId ?? ''),
         _render: Boolean(participant && (!participant?.local || ownProps.contained)
-            && (!participant?.fakeParticipant || isScreenShareParticipant(participant)))
+            && (!participant?.fakeParticipant || isScreenShareParticipant(participant) || isSharedIframeParticipant(participant)))
     };
 }
 

@@ -1,78 +1,95 @@
-import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from "../base/conference/actionTypes";
-import { getCurrentConference } from "../base/conference/functions";
-import { getLocalParticipant } from "../base/participants/functions";
-import MiddlewareRegistry from "../base/redux/MiddlewareRegistry";
+import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from '../base/conference/actionTypes';
+import { participantJoined, participantLeft, pinParticipant } from '../base/participants/actions';
+import { getLocalParticipant } from '../base/participants/functions';
+import { FakeParticipant } from '../base/participants/types';
+import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 
-import { resetSharedIframeState, setSharedIframeState } from "./actions";
-import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from "./constants";
+import { resetSharedIframeState, setSharedIframeState } from './actions';
+import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
+import { createOrUpdateInstantAccount } from './functions';
 
-MiddlewareRegistry.register((store) => (next) => (action) => {
+MiddlewareRegistry.register(store => next => action => {
     const result = next(action);
     const { dispatch, getState } = store;
 
     switch (action.type) {
-        case CONFERENCE_JOIN_IN_PROGRESS: {
-            const { conference } = action;
+    case CONFERENCE_JOIN_IN_PROGRESS: {
+        const { conference } = action;
 
-            conference.addCommandListener(
-                SHARED_IFRAME,
-                async ({
-                    value,
-                    attributes,
-                }: {
-                    value: string;
-                    attributes: { from: string; state: string; token: string };
-                }) => {
-                    const ownerId = attributes.from;
-                    const status = attributes.state;
-                    const token = attributes.token;
+        conference.addCommandListener(
+                    SHARED_IFRAME,
+                    async ({
+                        value,
+                        attributes,
+                    }: {
+                        attributes: { from: string; state: string; token: string; };
+                        value: string;
+                    }) => {
+                        const ownerId = attributes.from;
+                        const status = attributes.state;
+                        const token = attributes.token;
+                        const state = getState();
+                        const { url: currentUrl } = state['features/shared-iframe'] || {};
 
-                    if (status === SHARED_IFRAME_STATUSES.STOP) {
-                        dispatch(resetSharedIframeState());
-                        return;
-                    }
+                        if (status === SHARED_IFRAME_STATUSES.STOP) {
+                            // Remove the iframe participant when stopping
+                            dispatch(participantLeft(currentUrl ?? '', conference, {
+                                fakeParticipant: FakeParticipant.SharedIframe
+                            }));
+                            dispatch(resetSharedIframeState());
 
-                    const localParticipant = getLocalParticipant(getState());
-
-                    let url = value;
-
-                    if (ownerId === localParticipant?.id) {
-                        url = url + `?token=${token}`;
-                    } else {
-                        // 从本地获取登录令牌
-                        const localToken = localStorage.getItem("KloudUserToken");
-                        if (localToken) {
-                            url = url + `?token=${localToken}`;
+                            return;
                         }
-                    }
 
-                    dispatch(
-                        setSharedIframeState({
-                            status,
-                            ownerId,
-                            url,
-                        })
-                    );
-                }
-            );
-            break;
-        }
-        case CONFERENCE_LEFT: {
-            dispatch(resetSharedIframeState());
-            break;
-        }
+                        const localParticipant = getLocalParticipant(getState());
+
+                        let url = value;
+
+                        if (ownerId === localParticipant?.id) {
+                            url = url + `?token=${token}`;
+                        } else {
+                            // 从本地获取登录令牌
+                            const localToken = localStorage.getItem('KloudUserToken');
+
+                            if (localToken) {
+                                url = url + `?token=${localToken}`;
+                            } else {
+                                const anonymousToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+
+                                url = url + `?token=${anonymousToken}`;
+                            }
+                        }
+
+                        // If this is a new iframe or the URL changed, create a new participant
+                        if (!currentUrl || currentUrl !== url) {
+                            dispatch(participantJoined({
+                                conference,
+                                fakeParticipant: FakeParticipant.SharedIframe,
+                                id: url,
+                                name: 'Shared Iframe'
+                            }));
+
+                            // Pin the iframe participant to the stage
+                            dispatch(pinParticipant(url));
+                        }
+
+                        dispatch(
+                            setSharedIframeState({
+                                status,
+                                ownerId,
+                                url,
+                            })
+                        );
+                    }
+        );
+        break;
+    }
+    case CONFERENCE_LEFT: {
+        dispatch(resetSharedIframeState());
+        break;
+    }
     }
 
     return result;
 });
 
-function safeParse(s?: string) {
-    if (!s) {
-        return undefined;
-    }
-    try {
-        return JSON.parse(s);
-    } catch (_e) {
-        return undefined;
-    }
-}

@@ -338,6 +338,16 @@ export function isSharedVideoParticipant(participant?: IParticipant): boolean {
 }
 
 /**
+ * Returns whether the (fake) participant is a shared iframe.
+ *
+ * @param {IParticipant|undefined} participant - The participant entity.
+ * @returns {boolean} - True if it's a shared iframe participant.
+ */
+export function isSharedIframeParticipant(participant?: IParticipant): boolean {
+    return participant?.fakeParticipant === FakeParticipant.SharedIframe;
+}
+
+/**
  * Returns whether the fake participant is a whiteboard.
  *
  * @param {IParticipant|undefined} participant - The participant entity.
@@ -451,6 +461,10 @@ export function getParticipantDisplayName(stateful: IStateful, id: string): stri
             return getScreenshareParticipantDisplayName(state, id);
         }
 
+        if (isSharedIframeParticipant(participant)) {
+            return getSharedIframeParticipantDisplayName(state, id);
+        }
+
         if (participant.name) {
             return participant.name;
         }
@@ -504,6 +518,22 @@ export function getScreenshareParticipantDisplayName(stateful: IStateful, id: st
     const ownerDisplayName = getParticipantDisplayName(stateful, getVirtualScreenshareParticipantOwnerId(id));
 
     return i18next.t('screenshareDisplayName', { name: ownerDisplayName });
+}
+
+/**
+ * Returns shared iframe participant's display name.
+ *
+ * @param {(Function|Object)} stateful - The (whole) redux state, or redux's {@code getState} function to be used to
+ * retrieve the state.
+ * @param {string} id - The ID of the shared iframe participant's display name to retrieve.
+ * @returns {string}
+ */
+export function getSharedIframeParticipantDisplayName(stateful: IStateful, id: string) {
+    const state = toState(stateful);
+    const { ownerId } = state['features/shared-iframe'] || {};
+    const ownerDisplayName = ownerId ? getParticipantDisplayName(stateful, ownerId) : '';
+
+    return i18next.t('sharedIframeDisplayName', { name: ownerDisplayName });
 }
 
 /**

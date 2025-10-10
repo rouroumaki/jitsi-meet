@@ -1,19 +1,19 @@
-import { IStore } from "../app/types";
-import { getCurrentConference } from "../base/conference/functions";
-import { getLocalParticipant } from "../base/participants/functions";
-import { openDialog } from "../base/dialog/actions";
+import { IStore } from '../app/types';
+import { getCurrentConference } from '../base/conference/functions';
+import { openDialog } from '../base/dialog/actions';
+import { getLocalParticipant } from '../base/participants/functions';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_STATE } from "./actionTypes";
-import { SHARED_IFRAME_STATUSES } from "./constants";
-import { createLivedocInstance, createOrUpdateInstantAccount, sendSharedIframeCommand } from "./functions";
-import SharedIframeDialog from "./components/web/SharedIframeDialog";
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_STATE } from './actionTypes';
+import SharedIframeDialog from './components/web/SharedIframeDialog';
+import { SHARED_IFRAME_STATUSES } from './constants';
+import { createLivedocInstance, createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
 export function setSharedIframeState(payload: {
-    status: string;
-    url?: string;
-    ownerId?: string;
-    token?: string;
     livedocInstanceId?: string;
+    ownerId?: string;
+    status: string;
+    token?: string;
+    url?: string;
 }) {
     return {
         type: SET_SHARED_IFRAME_STATE,
@@ -28,18 +28,25 @@ export function resetSharedIframeState() {
 }
 
 export function startSharedIframe(url: string) {
-    return async (dispatch: IStore["dispatch"], getState: IStore["getState"]) => {
+    return async (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
         const conference = getCurrentConference(getState());
         const localParticipant = getLocalParticipant(getState());
+
         if (!conference || !url) {
             return;
         }
 
         // 从本地获取登录令牌
-        const localToken = localStorage.getItem("KloudUserToken");
+        let localToken = localStorage.getItem('KloudUserToken');
+
+        if (!localToken) {
+            const anonymousToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+
+            localToken = anonymousToken;
+        }
 
         const jitsiInstanceId = conference.sessionId;
-        const livedocInstanceId = await createLivedocInstance({ userToken: localToken || "", jitsiInstanceId });
+        const livedocInstanceId = await createLivedocInstance({ userToken: localToken || '', jitsiInstanceId });
 
         url = `https://kloud.cn/GoogleMeet/MainStage/${livedocInstanceId}/0`;
         // dispatch(
@@ -56,13 +63,13 @@ export function startSharedIframe(url: string) {
             localParticipantId: localParticipant?.id,
             status: SHARED_IFRAME_STATUSES.START,
             url,
-            token: localToken || "",
+            token: localToken || '',
         });
     };
 }
 
 export function stopSharedIframe() {
-    return (dispatch: IStore["dispatch"], getState: IStore["getState"]) => {
+    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
         const state = getState();
         const conference = getCurrentConference(state);
         const localParticipant = getLocalParticipant(state);

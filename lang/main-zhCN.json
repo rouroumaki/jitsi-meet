@@ -1014,6 +1014,7 @@
         "uploadToCloud": "上传至云端"
     },
     "screenshareDisplayName": "{{name}}的屏幕",
+    "sharedIframeDisplayName": "{{name}}的Live Doc",
     "sectionList": {
         "pullToRefresh": "下拉刷新"
     },
@@ -1400,6 +1401,7 @@
         "pinToStage": "在视图中固定",
         "remoteControl": "启动/停止远程控制",
         "screenSharing": "参会者正在共享屏幕",
+        "sharedIframe": "参会者正在共享Live Doc",
         "show": "主屏展示",
         "showSelfView": "显示本人视图",
         "unpinFromStage": "取消固定",

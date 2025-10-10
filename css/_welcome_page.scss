@@ -295,14 +295,15 @@ body.welcome-page {
             display: flex;
             justify-content: flex-end;
             .login-button {
-                width: 300px;
+                width: fit-content;
                 margin-bottom: 16px;
                 background: #fff;
                 color: #000;
                 border-radius: 8px;
-                padding: 16px;
+                padding: 10px 20px;
                 font-size: 16px;
-                font-weight: 600;
+                border: 1px solid #DAE2ED;
+                font-weight: 500;
             }
         }
 

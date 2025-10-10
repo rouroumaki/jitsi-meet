@@ -63,19 +63,28 @@ const ThumbnailBottomIndicators = ({
 }: IProps) => {
     const { classes: styles, cx } = useStyles();
     const _allowEditing = !useSelector(isNameReadOnly);
-    const _defaultLocalDisplayName = interfaceConfig.DEFAULT_LOCAL_DISPLAY_NAME;
+    const _defaultLocalDisplayName = (window as any).interfaceConfig?.DEFAULT_LOCAL_DISPLAY_NAME;
     const _showDisplayName = useSelector(isDisplayNameVisible);
     const isVirtualScreenshareParticipant = useSelector(
         (state: IReduxState) => isScreenShareParticipantById(state, participantId)
+    );
+    const isSharedIframeParticipant = useSelector(
+        (state: IReduxState) => {
+            const participant = state['features/base/participants'].remote.get(participantId)
+                || state['features/base/participants'].local;
+
+            return participant && participant.fakeParticipant === 'SharedIframe';
+        }
     );
 
     return (<div className = { cx(className, 'bottom-indicators') }>
         {
             showStatusIndicators && <StatusIndicators
-                audio = { !isVirtualScreenshareParticipant }
+                audio = { !isVirtualScreenshareParticipant && !isSharedIframeParticipant }
                 moderator = { true }
                 participantID = { participantId }
                 screenshare = { isVirtualScreenshareParticipant }
+                sharediframe = { isSharedIframeParticipant }
                 thumbnailType = { thumbnailType } />
         }
         {

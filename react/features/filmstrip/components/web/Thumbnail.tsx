@@ -23,6 +23,7 @@ import {
     hasRaisedHand,
     isLocalScreenshareParticipant,
     isScreenShareParticipant,
+    isSharedIframeParticipant,
     isWhiteboardParticipant
 } from '../../../base/participants/functions';
 import { IParticipant } from '../../../base/participants/types';
@@ -63,6 +64,7 @@ import ThumbnailAudioIndicator from './ThumbnailAudioIndicator';
 import ThumbnailBottomIndicators from './ThumbnailBottomIndicators';
 import ThumbnailTopIndicators from './ThumbnailTopIndicators';
 import VirtualScreenshareParticipant from './VirtualScreenshareParticipant';
+import VirtualSharedIframeParticipant from './VirtualSharedIframeParticipant';
 
 /**
  * The type of the React {@code Component} state of {@link Thumbnail}.
@@ -1186,8 +1188,35 @@ class Thumbnail extends Component<IProps, IState> {
         if (fakeParticipant
             && !isWhiteboardParticipant(_participant)
             && !_isVirtualScreenshareParticipant
+            && !isSharedIframeParticipant(_participant)
         ) {
             return this._renderFakeParticipant();
+        }
+
+        if (isSharedIframeParticipant(_participant)) {
+            const { isHovered } = this.state;
+            const { _isMobile, _thumbnailType } = this.props;
+            const classes = withStyles.getClasses(this.props);
+
+            return (
+                <VirtualSharedIframeParticipant
+                    classes = { classes }
+                    containerClassName = { this._getContainerClassName() }
+                    isHovered = { isHovered }
+                    isLocal = { false }
+                    isMobile = { _isMobile }
+                    onClick = { this._onClick }
+                    onMouseEnter = { this._onMouseEnter }
+                    onMouseLeave = { this._onMouseLeave }
+                    onMouseMove = { this._onMouseMove }
+                    onTouchEnd = { this._onTouchEnd }
+                    onTouchMove = { this._onTouchMove }
+                    onTouchStart = { this._onTouchStart }
+                    participantId = { _participant.id }
+                    shouldDisplayTintBackground = { _shouldDisplayTintBackground }
+                    styles = { this._getStyles() }
+                    thumbnailType = { _thumbnailType } />
+            );
         }
 
         if (_isVirtualScreenshareParticipant) {

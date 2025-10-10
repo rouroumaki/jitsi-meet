@@ -1,12 +1,12 @@
-import ReducerRegistry from "../base/redux/ReducerRegistry";
+import ReducerRegistry from '../base/redux/ReducerRegistry';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_STATE } from "./actionTypes";
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_STATE } from './actionTypes';
 
 export interface ISharedIframeState {
     active: boolean;
-    url?: string;
-    ownerId?: string;
     livedocInstanceId?: string;
+    ownerId?: string;
+    url?: string;
 }
 
 const DEFAULT_STATE: ISharedIframeState = {
@@ -16,20 +16,20 @@ const DEFAULT_STATE: ISharedIframeState = {
     livedocInstanceId: undefined,
 };
 
-ReducerRegistry.register<ISharedIframeState>("features/shared-iframe", (state = DEFAULT_STATE, action) => {
+ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = DEFAULT_STATE, action) => {
     switch (action.type) {
-        case SET_SHARED_IFRAME_STATE:
-            return {
-                ...state,
-                active: action.status !== "stop",
-                ownerId: action.ownerId ?? state.ownerId,
-                url: action.url ?? state.url,
-                livedocInstanceId: action.livedocInstanceId ?? state.livedocInstanceId,
-            };
-        case RESET_SHARED_IFRAME_STATE:
-            return DEFAULT_STATE;
-        default:
-            return state;
+    case SET_SHARED_IFRAME_STATE:
+        return {
+            ...state,
+            active: action.status !== 'stop',
+            ownerId: action.ownerId ?? state.ownerId,
+            url: action.url ?? state.url,
+            livedocInstanceId: action.livedocInstanceId ?? state.livedocInstanceId,
+        };
+    case RESET_SHARED_IFRAME_STATE:
+        return DEFAULT_STATE;
+    default:
+        return state;
     }
 });
 

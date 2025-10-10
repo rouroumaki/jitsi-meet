@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { IReduxState } from '../../../app/types';
 import { MEDIA_TYPE } from '../../../base/media/constants';
 import { PARTICIPANT_ROLE } from '../../../base/participants/constants';
-import { getParticipantByIdOrUndefined, isScreenShareParticipantById } from '../../../base/participants/functions';
+import { getParticipantByIdOrUndefined, isScreenShareParticipantById, isSharedIframeParticipant } from '../../../base/participants/functions';
 import {
     getVideoTrackByParticipant,
     isLocalTrackMuted,
@@ -15,6 +15,7 @@ import { getIndicatorsTooltipPosition } from '../../functions.web';
 import AudioMutedIndicator from './AudioMutedIndicator';
 import ModeratorIndicator from './ModeratorIndicator';
 import ScreenShareIndicator from './ScreenShareIndicator';
+import SharedIframeIndicator from './SharedIframeIndicator';
 
 /**
  * The type of the React {@code Component} props of {@link StatusIndicators}.
@@ -35,6 +36,11 @@ interface IProps {
      * Indicates if the screen share indicator should be visible or not.
      */
     _showScreenShareIndicator: Boolean;
+
+    /**
+     * Indicates if the shared iframe indicator should be visible or not.
+     */
+    _showSharedIframeIndicator: Boolean;
 
     /**
      * The ID of the participant for which the status bar is rendered.
@@ -64,6 +70,7 @@ class StatusIndicators extends Component<IProps> {
             _showAudioMutedIndicator,
             _showModeratorIndicator,
             _showScreenShareIndicator,
+            _showSharedIframeIndicator,
             thumbnailType
         } = this.props;
         const tooltipPosition = getIndicatorsTooltipPosition(thumbnailType);
@@ -73,6 +80,7 @@ class StatusIndicators extends Component<IProps> {
                 { _showAudioMutedIndicator && <AudioMutedIndicator tooltipPosition = { tooltipPosition } /> }
                 { _showModeratorIndicator && <ModeratorIndicator tooltipPosition = { tooltipPosition } />}
                 { _showScreenShareIndicator && <ScreenShareIndicator tooltipPosition = { tooltipPosition } /> }
+                { _showSharedIframeIndicator && <SharedIframeIndicator tooltipPosition = { tooltipPosition } /> }
             </>
         );
     }
@@ -91,7 +99,7 @@ class StatusIndicators extends Component<IProps> {
  * }}
 */
 function _mapStateToProps(state: IReduxState, ownProps: any) {
-    const { participantID, audio, moderator, screenshare } = ownProps;
+    const { participantID, audio, moderator, screenshare, sharediframe } = ownProps;
 
     // Only the local participant won't have id for the time when the conference is not yet joined.
     const participant = getParticipantByIdOrUndefined(state, participantID);
@@ -99,6 +107,7 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
 
     let isAudioMuted = true;
     let isScreenSharing = false;
+    let isSharedIframe = false;
 
     if (participant?.local) {
         isAudioMuted = isLocalTrackMuted(tracks, MEDIA_TYPE.AUDIO);
@@ -110,13 +119,20 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         isAudioMuted = isRemoteTrackMuted(tracks, MEDIA_TYPE.AUDIO, participantID);
     }
 
+    // Check if this is a shared iframe participant
+    if (participant && isSharedIframeParticipant(participant)) {
+        isSharedIframe = true;
+        isAudioMuted = false; // Shared iframe participants don't have audio
+    }
+
     const { disableModeratorIndicator } = state['features/base/config'];
 
     return {
         _showAudioMutedIndicator: isAudioMuted && audio,
         _showModeratorIndicator:
             !disableModeratorIndicator && participant && participant.role === PARTICIPANT_ROLE.MODERATOR && moderator,
-        _showScreenShareIndicator: isScreenSharing && screenshare
+        _showScreenShareIndicator: isScreenSharing && screenshare,
+        _showSharedIframeIndicator: isSharedIframe && sharediframe
     };
 }
 

@@ -1,19 +1,20 @@
-import { IJitsiConference } from "../base/conference/reducer";
+import { IJitsiConference } from '../base/conference/reducer';
 
-import { SHARED_IFRAME } from "./constants";
+import { SHARED_IFRAME } from './constants';
 
 // 生成UUID的函数
 function generateUUID(): string {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = (Math.random() * 16) | 0;
-        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+
         return v.toString(16);
     });
 }
 
 // 从localStorage获取或生成新的KloudAnonymousSyncroomID
 export function getOrCreateKloudAnonymousSyncroomID(): string {
-    const storageKey = "KloudAnonymousSyncroomID";
+    const storageKey = 'KloudAnonymousSyncroomID';
     let guid = localStorage.getItem(storageKey);
 
     if (!guid) {
@@ -29,10 +30,10 @@ export async function createOrUpdateInstantAccount(userName: string): Promise<st
     const guid = getOrCreateKloudAnonymousSyncroomID();
 
     try {
-        const response = await fetch("https://api.peertime.cn/peertime/V1/User/CreateOrUpdateInstantAccout4Syncroom", {
-            method: "POST",
+        const response = await fetch('https://api.peertime.cn/peertime/V1/User/CreateOrUpdateInstantAccout4Syncroom', {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 Guid: guid,
@@ -45,16 +46,17 @@ export async function createOrUpdateInstantAccount(userName: string): Promise<st
         }
 
         const result = await response.json();
+
         return result.RetData.Account.UserToken;
     } catch (error) {
-        console.error("创建匿名账户失败:", error);
+        console.error('创建匿名账户失败:', error);
         throw error;
     }
 }
 
 export function sendSharedIframeCommand({
     conference,
-    localParticipantId = "",
+    localParticipantId = '',
     status,
     url,
     token,
@@ -62,11 +64,11 @@ export function sendSharedIframeCommand({
     conference?: IJitsiConference;
     localParticipantId?: string;
     status: string;
-    url?: string;
     token?: string;
+    url?: string;
 }) {
     conference?.sendCommandOnce(SHARED_IFRAME, {
-        value: url ?? "",
+        value: url ?? '',
         attributes: {
             from: localParticipantId,
             state: status,
@@ -79,14 +81,14 @@ export async function createLivedocInstance({
     userToken,
     jitsiInstanceId,
 }: {
-    userToken: string;
     jitsiInstanceId: string;
+    userToken: string;
 }) {
     try {
-        const response = await fetch("https://wss.peertime.cn/MeetingServer/jitsi/create_meeting_instance", {
-            method: "POST",
+        const response = await fetch('https://wss.peertime.cn/MeetingServer/jitsi/create_meeting_instance', {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
                 UserToken: userToken,
             },
             body: JSON.stringify({
@@ -100,9 +102,10 @@ export async function createLivedocInstance({
         }
 
         const result = await response.json();
+
         return result.data;
     } catch (error) {
-        console.error("创建livedoc实例失败:", error);
+        console.error('创建livedoc实例失败:', error);
         throw error;
     }
 }

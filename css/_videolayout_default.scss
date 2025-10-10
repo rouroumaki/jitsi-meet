@@ -133,7 +133,17 @@
     pointer-events: none;
 }
 
+#sharedIframe iframe {
+    width: 100%;
+    height: 100%;
+}
+
+#sharedIframe.disable-pointer {
+    pointer-events: none;
+}
+
 #sharedVideo,
+#sharedIframe,
 #etherpad,
 #localVideoWrapper video,
 #localVideoWrapper object,
