@@ -1,11 +1,9 @@
 import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from '../base/conference/actionTypes';
-import { participantJoined, participantLeft, pinParticipant } from '../base/participants/actions';
 import { getLocalParticipant } from '../base/participants/functions';
-import { FakeParticipant } from '../base/participants/types';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
-import { hideLoadingNotification, showLoadingNotification } from '../notifications/actions';
+import { setTileView } from '../video-layout/actions.any';
 
-import { resetSharedIframeState, setSharedIframeState } from './actions';
+import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState } from './actions';
 import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
 import { createOrUpdateInstantAccount } from './functions';
 
@@ -30,7 +28,7 @@ MiddlewareRegistry.register(store => next => action => {
                         const status = attributes.state;
                         const token = attributes.token;
                         const state = getState();
-                        const { url: currentUrl } = state['features/shared-iframe'] || {};
+                        const { url: _currentUrl } = state['features/shared-iframe'] || {};
 
                         if (status === SHARED_IFRAME_STATUSES.STOP) {
                             // Remove the iframe participant when stopping
@@ -68,6 +66,8 @@ MiddlewareRegistry.register(store => next => action => {
                                 }
                             }
 
+                            url = url + '&usetoken=1&fromjitsi=1';
+
                             // // If this is a new iframe or the URL changed, create a new participant
                             // if (!currentUrl || currentUrl !== url) {
                             //     dispatch(participantJoined({
@@ -88,6 +88,12 @@ MiddlewareRegistry.register(store => next => action => {
                                     url,
                                 })
                             );
+
+                            // 如果是新参会者接收到 livedoc 状态，自动显示
+                            if (status === SHARED_IFRAME_STATUSES.START && ownerId !== localParticipant?.id) {
+                                dispatch(setTileView(false)); // 关闭 tile view
+                                dispatch(setSharedIframeActive(true)); // 显示 livedoc
+                            }
                         } finally {
                             // dispatch(hideLoadingNotification());
                         }
@@ -97,9 +103,10 @@ MiddlewareRegistry.register(store => next => action => {
     }
     case CONFERENCE_LEFT: {
         dispatch(resetSharedIframeState());
-        dispatch(hideLoadingNotification());
+        // dispatch(hideLoadingNotification());
         break;
     }
+
     }
 
     return result;

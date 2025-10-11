@@ -1,11 +1,12 @@
 import { IStore } from '../app/types';
 import { isTileViewModeDisabled } from '../filmstrip/functions.any';
+import { setSharedIframeActive } from '../shared-iframe/actions';
 
 import {
     SET_TILE_VIEW,
     VIRTUAL_SCREENSHARE_REMOTE_PARTICIPANTS_UPDATED
 } from './actionTypes';
-import { shouldDisplayTileView } from './functions';
+import { shouldDisplayTileView } from './functions.any';
 
 /**
  * Creates a (redux) action which signals that the list of known remote virtual screen share participant ids has
@@ -38,10 +39,17 @@ export function setTileView(enabled?: boolean) {
     return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
         const tileViewDisabled = isTileViewModeDisabled(getState());
 
-        !tileViewDisabled && dispatch({
-            type: SET_TILE_VIEW,
-            enabled
-        });
+        if (!tileViewDisabled) {
+            dispatch({
+                type: SET_TILE_VIEW,
+                enabled
+            });
+
+            if (enabled) {
+                // 进入 tile view 时隐藏 livedoc
+                dispatch(setSharedIframeActive(false));
+            }
+        }
     };
 }
 

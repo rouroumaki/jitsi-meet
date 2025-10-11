@@ -1,6 +1,6 @@
 import ReducerRegistry from '../base/redux/ReducerRegistry';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_STATE } from './actionTypes';
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE } from './actionTypes';
 
 export interface ISharedIframeState {
     active: boolean;
@@ -25,6 +25,11 @@ ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = 
             ownerId: action.ownerId ?? state.ownerId,
             url: action.url ?? state.url,
             livedocInstanceId: action.livedocInstanceId ?? state.livedocInstanceId,
+        };
+    case SET_SHARED_IFRAME_ACTIVE:
+        return {
+            ...state,
+            active: action.active
         };
     case RESET_SHARED_IFRAME_STATE:
         return DEFAULT_STATE;

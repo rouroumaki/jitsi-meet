@@ -2,9 +2,9 @@ import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { openDialog } from '../base/dialog/actions';
 import { getLocalParticipant } from '../base/participants/functions';
-import { showLoadingNotification } from '../notifications/actions';
+// import { showLoadingNotification } from '../notifications/actions';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_STATE } from './actionTypes';
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE } from './actionTypes';
 import SharedIframeDialog from './components/web/SharedIframeDialog';
 import { SHARED_IFRAME_STATUSES } from './constants';
 import { createLivedocInstance, createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
@@ -25,6 +25,13 @@ export function setSharedIframeState(payload: {
 export function resetSharedIframeState() {
     return {
         type: RESET_SHARED_IFRAME_STATE,
+    } as const;
+}
+
+export function setSharedIframeActive(active: boolean) {
+    return {
+        type: SET_SHARED_IFRAME_ACTIVE,
+        active
     } as const;
 }
 

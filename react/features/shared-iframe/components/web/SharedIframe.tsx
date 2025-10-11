@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
-// @ts-expect-error
+// @ts-ignore
 import Filmstrip from '../../../../../modules/UI/videolayout/Filmstrip';
 import { IReduxState } from '../../../app/types';
-import { FakeParticipant } from '../../../base/participants/types';
+// import { FakeParticipant } from '../../../base/participants/types';
 import { getVerticalViewMaxWidth } from '../../../filmstrip/functions.web';
-import { getLargeVideoParticipant } from '../../../large-video/functions';
+// import { hideLoadingNotification } from '../../../notifications/actions';
+import { showToolbox } from '../../../toolbox/actions.web';
 // import { getToolboxHeight } from '../../../toolbox/functions.web';
 
 interface IProps {
-
     /**
      * The available client width.
      */
@@ -20,6 +20,11 @@ interface IProps {
      * The available client width.
      */
     clientWidth: number;
+
+    /**
+     * Redux dispatch function.
+     */
+    dispatch: Function;
 
     /**
      * Whether the (vertical) filmstrip is visible or not.
@@ -51,10 +56,6 @@ interface IProps {
      */
     isResizing: boolean;
 
-    /**
-     * Whether the shared iframe should be shown on stage.
-     */
-    onStage: boolean;
 }
 
 /** .
@@ -64,6 +65,66 @@ interface IProps {
  * @augments Component
  */
 class SharedIframe extends Component<IProps> {
+    private _messageListener?: (event: MessageEvent) => void;
+
+    /**
+     * Handles messages from the iframe.
+     *
+     * @param {MessageEvent} event - The message event.
+     * @private
+     * @returns {void}
+     */
+    _handleIframeMessage = (event: MessageEvent) => {
+        // 确保消息来自我们的 iframe
+        const iframe = document.getElementById('sharedIframePlayer') as HTMLIFrameElement;
+
+        if (!iframe || event.source !== iframe.contentWindow) {
+            return;
+        }
+
+        try {
+            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+            // 处理不同类型的消息
+            switch (data.type) {
+            case 'mousemove':
+                this.props.dispatch(showToolbox());
+                break;
+            case 'onkloudloaded':
+                // this.props.dispatch(hideLoadingNotification());
+                break;
+            default:
+                break;
+            }
+        } catch (error) {
+            console.warn('Failed to parse message from LiveDoc iframe:', error);
+        }
+    };
+
+    /**
+     * Implements React's {@link Component#componentDidMount()}.
+     *
+     * @inheritdoc
+     * @returns {void}
+     */
+    override componentDidMount() {
+        this._messageListener = this._handleIframeMessage;
+        window.addEventListener('message', this._messageListener);
+    }
+
+    /**
+     * Implements React's {@link Component#componentWillUnmount()}.
+     *
+     * @inheritdoc
+     * @returns {void}
+     */
+    override componentWillUnmount() {
+        if (this._messageListener) {
+            window.removeEventListener('message', this._messageListener);
+            this._messageListener = undefined;
+        }
+    }
+
     /**
      * Computes the width and the height of the component.
      *
@@ -107,15 +168,18 @@ class SharedIframe extends Component<IProps> {
      * @returns {React$Element}
      */
     override render() {
-        const { isEnabled, isResizing, isIframeShared, onStage, iframeUrl } = this.props;
+        const { isEnabled, isResizing, isIframeShared, iframeUrl } = this.props;
 
-        if (!isEnabled || !isIframeShared || !iframeUrl) {
+        // 仅在没有 url 时不渲染；有 url 时始终挂载，避免重新加载 iframe
+        if (!isEnabled || !iframeUrl) {
             return null;
         }
 
         const style: any = this.getDimensions();
 
-        if (!onStage) {
+        // onStage 原来是onStage逻辑 用于判断participant是否是sharediframe
+        if (!isIframeShared) {
+            // eslint-disable-next-line react-native/no-inline-styles
             style.display = 'none';
         }
 
@@ -149,7 +213,6 @@ function _mapStateToProps(state: IReduxState) {
     const { clientHeight, videoSpaceWidth } = state['features/base/responsive-ui'];
     const { visible, isResizing } = state['features/filmstrip'];
     const { isResizing: isChatResizing } = state['features/chat'];
-    const onStage = getLargeVideoParticipant(state)?.fakeParticipant === FakeParticipant.SharedIframe;
     const isIframeShared = Boolean(active && iframeUrl);
 
     return {
@@ -160,7 +223,6 @@ function _mapStateToProps(state: IReduxState) {
         isEnabled: true, // Shared iframe is always enabled when available
         isResizing: isResizing || isChatResizing,
         isIframeShared,
-        onStage,
         iframeUrl
     };
 }

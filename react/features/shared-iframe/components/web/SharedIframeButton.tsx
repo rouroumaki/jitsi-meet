@@ -5,42 +5,35 @@ import { translate } from '../../../base/i18n/functions';
 import { IconLivedoc } from '../../../base/icons/svg';
 import { getLocalParticipant } from '../../../base/participants/functions';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
-import { showSharedIframeDialog, startSharedIframe, stopSharedIframe } from '../../actions';
+import { setTileView } from '../../../video-layout/actions.any';
+import { setSharedIframeActive, startSharedIframe } from '../../actions';
 
 interface IProps extends AbstractButtonProps {
     _isActive: boolean;
     _localParticipant: any;
+    _url?: string;
 }
 
 class SharedIframeButton extends AbstractButton<IProps> {
-    override accessibilityLabel = 'Share livedoc';
-    override toggledAccessibilityLabel = 'Stop sharing livedoc';
+    override accessibilityLabel = 'Show LiveDoc';
+    override toggledAccessibilityLabel = 'Hide LiveDoc';
     override icon = IconLivedoc;
-    override label = 'Share livedoc';
-    override toggledLabel = 'Stop sharing livedoc';
-    override tooltip = 'Share livedoc';
-    override toggledTooltip = 'Stop sharing livedoc';
+    override label = 'Show LiveDoc';
+    override toggledLabel = 'Hide LiveDoc';
+    override tooltip = 'Show LiveDoc';
+    override toggledTooltip = 'Hide LiveDoc';
 
     override async _handleClick() {
-        if (this.props._isActive) {
-            this.props.dispatch(stopSharedIframe());
+        const { _isActive, _url, dispatch } = this.props;
+
+        if (_isActive) {
+            dispatch(setSharedIframeActive(false));
+        } else if (_url) {
+            dispatch(setTileView(false));
+            dispatch(setSharedIframeActive(true));
         } else {
-            this.props.dispatch(startSharedIframe('https://kloud.cn/GoogleMeet/MainStage/1234567890/0'));
-            // this.props.dispatch(
-            //     showSharedIframeDialog(async (url: string) => {
-            //         try {
-            //             // 启动共享iframe
-            //             this.props.dispatch<any>(
-            //                 // @ts-ignore
-            //                 require("../../actions").startSharedIframe(url)
-            //             );
-            //         } catch (error) {
-            //             console.error("创建匿名会议失败:", error);
-            //             // 这里可以添加用户提示，比如显示错误消息
-            //             alert("创建匿名会议失败，请重试");
-            //         }
-            //     })
-            // );
+            dispatch(setTileView(false));
+            dispatch(startSharedIframe('https://kloud.cn/GoogleMeet/MainStage/1234567890/0'));
         }
     }
 
@@ -52,6 +45,7 @@ class SharedIframeButton extends AbstractButton<IProps> {
 function _mapStateToProps(state: IReduxState) {
     return {
         _isActive: Boolean(state['features/shared-iframe']?.active),
+        _url: state['features/shared-iframe']?.url,
         _localParticipant: getLocalParticipant(state),
     };
 }
