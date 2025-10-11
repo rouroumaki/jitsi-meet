@@ -247,18 +247,26 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
                                 </div>
 
                                 <button
-                                    aria-disabled="false"
-                                    aria-label="Start meeting"
-                                    className="welcome-page-button"
+                                    aria-disabled={!this._kloudUserName}
+                                    aria-label={this._kloudUserName ? "Start meeting" : "Login required to start meeting"}
+                                    className={`welcome-page-button ${!this._kloudUserName ? "disabled" : ""}`}
                                     id="enter_room_button"
                                     onClick={this._onFormSubmit}
                                     tabIndex={0}
                                     type="button"
                                 >
-                                    {t("welcomepage.startMeeting")}
+                                    {this._kloudUserName ? t("welcomepage.startMeeting") : "请先登录 Kloud"}
                                 </button>
                             </div>
                         </div>
+                        {!this._kloudUserName && (
+                            <div className="not-allow-title-character-div" role="alert">
+                                <Icon src={IconWarning} />
+                                <span className="not-allow-title-character-text">
+                                    请先登录 Kloud 账户才能开始会议
+                                </span>
+                            </div>
+                        )}
                         {this._titleHasNotAllowCharacter && (
                             <div className="not-allow-title-character-div" role="alert">
                                 <Icon src={IconWarning} />
@@ -349,6 +357,13 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      */
     _onFormSubmit(event: React.FormEvent) {
         event.preventDefault();
+
+        // 检查是否已登录 Kloud
+        if (!this._kloudUserName) {
+            // 如果未登录，显示登录对话框
+            this._onLogin();
+            return;
+        }
 
         if (!this._roomInputRef || this._roomInputRef.reportValidity()) {
             this._onJoin();

@@ -106,7 +106,6 @@ MiddlewareRegistry.register(store => next => action => {
         // dispatch(hideLoadingNotification());
         break;
     }
-
     }
 
     return result;
