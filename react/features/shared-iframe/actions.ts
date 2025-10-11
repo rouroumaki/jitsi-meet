@@ -2,6 +2,7 @@ import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { openDialog } from '../base/dialog/actions';
 import { getLocalParticipant } from '../base/participants/functions';
+import { showLoadingNotification } from '../notifications/actions';
 // import { showLoadingNotification } from '../notifications/actions';
 
 import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE } from './actionTypes';
@@ -55,9 +56,9 @@ export function startSharedIframe(url: string) {
 
         const jitsiInstanceId = conference.sessionId;
 
-        // dispatch(showLoadingNotification({
-        //     title: 'Loading LiveDoc share, please wait ',
-        // }));
+        dispatch(showLoadingNotification({
+            title: 'Loading LiveDoc share, please wait ',
+        }));
 
         const livedocInstanceId = await createLivedocInstance({ userToken: localToken || '', jitsiInstanceId });
 

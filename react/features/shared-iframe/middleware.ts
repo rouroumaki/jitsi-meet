@@ -1,6 +1,7 @@
 import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from '../base/conference/actionTypes';
 import { getLocalParticipant } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
+import { showLoadingNotification } from '../notifications/actions';
 import { setTileView } from '../video-layout/actions.any';
 
 import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState } from './actions';
@@ -40,10 +41,10 @@ MiddlewareRegistry.register(store => next => action => {
                             return;
                         }
 
-                        // // 显示 loading notification
-                        // dispatch(showLoadingNotification({
-                        //     title: 'Loading LiveDoc share, please wait ',
-                        // }));
+                        // 显示 loading notification
+                        dispatch(showLoadingNotification({
+                            title: 'Loading LiveDoc share, please wait ',
+                        }));
 
                         try {
 

@@ -7,6 +7,7 @@ import { IReduxState } from '../../../app/types';
 // import { FakeParticipant } from '../../../base/participants/types';
 import { getVerticalViewMaxWidth } from '../../../filmstrip/functions.web';
 // import { hideLoadingNotification } from '../../../notifications/actions';
+import { hideLoadingNotification } from '../../../notifications/actions';
 import { showToolbox } from '../../../toolbox/actions.web';
 // import { getToolboxHeight } from '../../../toolbox/functions.web';
 
@@ -91,7 +92,7 @@ class SharedIframe extends Component<IProps> {
                 this.props.dispatch(showToolbox());
                 break;
             case 'onkloudloaded':
-                // this.props.dispatch(hideLoadingNotification());
+                this.props.dispatch(hideLoadingNotification());
                 break;
             default:
                 break;
