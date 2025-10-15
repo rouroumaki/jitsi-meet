@@ -1,10 +1,11 @@
 import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from '../base/conference/actionTypes';
-import { getLocalParticipant } from '../base/participants/functions';
+import { getLocalParticipant, getScreenshareParticipantIds } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
+import { TRACK_ADDED, TRACK_REMOVED, TRACK_UPDATED } from '../base/tracks/actionTypes';
 import { showLoadingNotification } from '../notifications/actions';
 import { setTileView } from '../video-layout/actions.any';
 
-import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState } from './actions';
+import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState, setWasActiveBeforeScreenshare } from './actions';
 import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
 import { createOrUpdateInstantAccount } from './functions';
 
@@ -37,6 +38,23 @@ MiddlewareRegistry.register(store => next => action => {
                             //     fakeParticipant: FakeParticipant.SharedIframe
                             // }));
                             dispatch(resetSharedIframeState());
+
+                            return;
+                        }
+
+                        // 处理视图显示/隐藏状态
+                        if (status === SHARED_IFRAME_STATUSES.SHOW) {
+                            // 显示 LiveDoc 视图
+                            dispatch(setTileView(false)); // 关闭 tile view
+
+                            dispatch(setSharedIframeActive(true)); // 显示 livedoc
+
+                            return;
+                        }
+
+                        if (status === SHARED_IFRAME_STATUSES.HIDE) {
+                            // 隐藏 LiveDoc 视图
+                            dispatch(setSharedIframeActive(false)); // 隐藏 livedoc
 
                             return;
                         }
@@ -105,6 +123,28 @@ MiddlewareRegistry.register(store => next => action => {
     case CONFERENCE_LEFT: {
         dispatch(resetSharedIframeState());
         // dispatch(hideLoadingNotification());
+        break;
+    }
+    case TRACK_ADDED:
+    case TRACK_UPDATED:
+    case TRACK_REMOVED: {
+        // 检查屏幕共享状态变化
+        const state = getState();
+        const screenshareParticipantIds = getScreenshareParticipantIds(state);
+
+        console.log('screenshareParticipantIds', screenshareParticipantIds);
+        const { active: isLiveDocActive, wasActiveBeforeScreenshare } = state['features/shared-iframe'] || { active: false };
+
+        // 如果有人开始屏幕共享且 LiveDoc 当前是显示状态，则隐藏 LiveDoc
+        if (screenshareParticipantIds.length > 0 && isLiveDocActive) {
+            // 保存当前状态，以便屏幕共享结束后恢复
+            dispatch(setWasActiveBeforeScreenshare(true));
+            dispatch(setSharedIframeActive(false));
+        } else if (screenshareParticipantIds.length === 0 && wasActiveBeforeScreenshare) {
+            // 如果屏幕共享停止且之前 LiveDoc 是显示状态，则恢复显示
+            dispatch(setSharedIframeActive(true));
+            dispatch(setWasActiveBeforeScreenshare(false));
+        }
         break;
     }
     }

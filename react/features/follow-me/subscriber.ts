@@ -5,8 +5,8 @@ import {
     isLocalParticipantModerator
 } from '../base/participants/functions';
 import StateListenerRegistry from '../base/redux/StateListenerRegistry';
-import { getPinnedActiveParticipants, isStageFilmstripEnabled } from '../filmstrip/functions';
-import { shouldDisplayTileView } from '../video-layout/functions';
+import { getPinnedActiveParticipants, isStageFilmstripEnabled } from '../filmstrip/functions.web';
+import { shouldDisplayTileView } from '../video-layout/functions.web';
 
 import { FOLLOW_ME_COMMAND } from './constants';
 
@@ -130,10 +130,11 @@ function _sendFollowMeCommand(
         );
 
         return;
-    } else if (!state['features/base/conference'].followMeEnabled) {
-        return;
+    // } else if (!state['features/base/conference'].followMeEnabled) {
+    //     return;
     }
 
+    // 主持人自动发送视图同步命令，无需检查 followMeEnabled 配置
     conference.sendCommand(
         FOLLOW_ME_COMMAND,
         { attributes: _getFollowMeState(state) }

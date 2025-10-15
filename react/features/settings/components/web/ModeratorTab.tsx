@@ -246,20 +246,20 @@ class ModeratorTab extends AbstractDialogTab<IProps, any> {
                     label = { t('settings.startVideoMuted') }
                     name = 'start-video-muted'
                     onChange = { this._onStartVideoMutedChanged } /> }
-                <Checkbox
+                {/* <Checkbox
                     checked = { followMeEnabled && !followMeActive && !followMeRecorderChecked }
                     className = { classes.checkbox }
                     disabled = { followMeActive || followMeRecorderActive }
                     label = { t('settings.followMe') }
                     name = 'follow-me'
-                    onChange = { this._onFollowMeEnabledChanged } />
-                <Checkbox
+                    onChange = { this._onFollowMeEnabledChanged } /> */}
+                {/* <Checkbox
                     checked = { followMeRecorderChecked }
                     className = { classes.checkbox }
                     disabled = { followMeRecorderActive || followMeActive }
                     label = { t('settings.followMeRecorder') }
                     name = 'follow-me-recorder'
-                    onChange = { this._onFollowMeRecorderEnabledChanged } />
+                    onChange = { this._onFollowMeRecorderEnabledChanged } /> */}
                 { !disableReactionsModeration
                         && <Checkbox
                             checked = { startReactionsMuted }

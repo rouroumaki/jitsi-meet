@@ -5,7 +5,7 @@ import { getLocalParticipant } from '../base/participants/functions';
 import { showLoadingNotification } from '../notifications/actions';
 // import { showLoadingNotification } from '../notifications/actions';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE } from './actionTypes';
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE } from './actionTypes';
 import SharedIframeDialog from './components/web/SharedIframeDialog';
 import { SHARED_IFRAME_STATUSES } from './constants';
 import { createLivedocInstance, createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
@@ -33,6 +33,13 @@ export function setSharedIframeActive(active: boolean) {
     return {
         type: SET_SHARED_IFRAME_ACTIVE,
         active
+    } as const;
+}
+
+export function setWasActiveBeforeScreenshare(wasActive: boolean) {
+    return {
+        type: SET_WAS_ACTIVE_BEFORE_SCREENSHARE,
+        wasActive
     } as const;
 }
 

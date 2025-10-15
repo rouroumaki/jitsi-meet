@@ -1,12 +1,13 @@
 import ReducerRegistry from '../base/redux/ReducerRegistry';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE } from './actionTypes';
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE } from './actionTypes';
 
 export interface ISharedIframeState {
     active: boolean;
     livedocInstanceId?: string;
     ownerId?: string;
     url?: string;
+    wasActiveBeforeScreenshare?: boolean;
 }
 
 const DEFAULT_STATE: ISharedIframeState = {
@@ -14,6 +15,7 @@ const DEFAULT_STATE: ISharedIframeState = {
     url: undefined,
     ownerId: undefined,
     livedocInstanceId: undefined,
+    wasActiveBeforeScreenshare: false,
 };
 
 ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = DEFAULT_STATE, action) => {
@@ -30,6 +32,11 @@ ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = 
         return {
             ...state,
             active: action.active
+        };
+    case SET_WAS_ACTIVE_BEFORE_SCREENSHARE:
+        return {
+            ...state,
+            wasActiveBeforeScreenshare: action.wasActive
         };
     case RESET_SHARED_IFRAME_STATE:
         return DEFAULT_STATE;
