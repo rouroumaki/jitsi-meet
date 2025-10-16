@@ -61,7 +61,7 @@ MiddlewareRegistry.register(store => next => action => {
 
                         // 显示 loading notification
                         dispatch(showLoadingNotification({
-                            title: 'Loading LiveDoc share, please wait ',
+                            title: 'Loading LiveDoc View, please wait ',
                         }));
 
                         try {

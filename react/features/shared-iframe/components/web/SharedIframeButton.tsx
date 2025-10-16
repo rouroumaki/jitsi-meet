@@ -21,17 +21,18 @@ interface IProps extends AbstractButtonProps {
 
 class SharedIframeButton extends AbstractButton<IProps> {
     override accessibilityLabel = 'Show LiveDoc';
-    override toggledAccessibilityLabel = 'Hide LiveDoc';
+    override toggledAccessibilityLabel = 'Show LiveDoc';
     override icon = IconLivedoc;
     override label = 'Show LiveDoc';
-    override toggledLabel = 'Hide LiveDoc';
+    override toggledLabel = 'Show LiveDoc';
     override tooltip = 'Show LiveDoc';
-    override toggledTooltip = 'Hide LiveDoc';
+    override toggledTooltip = 'Show LiveDoc';
 
     override async _handleClick() {
         const { _isActive, _url, _conference, _localParticipant, dispatch } = this.props;
 
         if (_isActive) {
+            return;
             // 隐藏 LiveDoc
             dispatch(setSharedIframeActive(false));
 

@@ -64,7 +64,7 @@ export function startSharedIframe(url: string) {
         const jitsiInstanceId = conference.sessionId;
 
         dispatch(showLoadingNotification({
-            title: 'Loading LiveDoc share, please wait ',
+            title: 'Loading LiveDoc View, please wait ',
         }));
 
         const livedocInstanceId = await createLivedocInstance({ userToken: localToken || '', jitsiInstanceId });

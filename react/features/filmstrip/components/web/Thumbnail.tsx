@@ -144,6 +144,11 @@ export interface IProps extends WithTranslation {
     _isHidden: boolean;
 
     /**
+     * Whether the live doc is active.
+     */
+    _isLiveDocActive: boolean;
+
+    /**
      * Whether we are currently running in a mobile browser.
      */
     _isMobile: boolean;
@@ -743,8 +748,12 @@ class Thumbnail extends Component<IProps, IState> {
      * @returns {void}
      */
     _onClick() {
-        const { _participant, dispatch, _stageFilmstripLayout } = this.props;
+        const { _participant, dispatch, _stageFilmstripLayout, _isLiveDocActive } = this.props;
         const { id, pinned } = _participant;
+
+        if (_isLiveDocActive) {
+            return;
+        }
 
         if (_stageFilmstripLayout) {
             dispatch(togglePinStageParticipant(id));
@@ -1417,7 +1426,8 @@ function _mapStateToProps(state: IReduxState, ownProps: any): Object {
         _videoObjectPosition: getVideoObjectPosition(state, participant?.id),
         _videoTrack,
         ...size,
-        _gifSrc: mode === 'chat' ? null : gifSrc
+        _gifSrc: mode === 'chat' ? null : gifSrc,
+        _isLiveDocActive: state['features/shared-iframe'].active
     };
 }
 
