@@ -1,9 +1,11 @@
 import React, { useCallback } from 'react';
 import { WithTranslation } from 'react-i18next';
-import { useStore } from 'react-redux';
+import { useSelector, useStore } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
+import { IReduxState } from '../../app/types';
 import { translate } from '../../base/i18n/functions';
+import { getLocalParticipant } from '../../base/participants/functions';
 import { setSeeWhatIsBeingShared } from '../actions.web';
 
 const useStyles = makeStyles()(theme => {
@@ -77,6 +79,7 @@ const useStyles = makeStyles()(theme => {
 const ScreenSharePlaceholder: React.FC<WithTranslation> = ({ t }) => {
     const { classes } = useStyles();
     const store = useStore();
+    const localDisplayName = useSelector((state: IReduxState) => getLocalParticipant(state)?.name ?? '');
 
     const updateShowMeWhatImSharing = useCallback(() => {
         store.dispatch(setSeeWhatIsBeingShared(true));
@@ -87,7 +90,11 @@ const ScreenSharePlaceholder: React.FC<WithTranslation> = ({ t }) => {
             <div className = { classes.content }>
                 <div className = { classes.laptop } />
                 <div className = { classes.laptopStand } />
-                <span className = { classes.sharingMessage }>{ t('largeVideo.screenIsShared') }</span>
+                <span className = { classes.sharingMessage }>{
+                    localDisplayName
+                        ? t('largeVideo.screenIsSharedWithName', { name: localDisplayName })
+                        : t('largeVideo.screenIsShared')
+                }</span>
                 <span
                     className = { classes.showSharing }
                     onClick = { updateShowMeWhatImSharing }

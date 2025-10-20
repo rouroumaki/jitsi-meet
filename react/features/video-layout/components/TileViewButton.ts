@@ -7,16 +7,24 @@ import { TILE_VIEW_ENABLED } from '../../base/flags/constants';
 import { getFeatureFlag } from '../../base/flags/functions';
 import { translate } from '../../base/i18n/functions';
 import { IconTileView } from '../../base/icons/svg';
+import { isLocalParticipantModerator } from '../../base/participants/functions';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../base/toolbox/components/AbstractButton';
-import { setOverflowMenuVisible } from '../../toolbox/actions';
-import { setTileView } from '../actions';
-import { shouldDisplayTileView } from '../functions';
+import { showWarningNotification } from '../../notifications/actions';
+import { NOTIFICATION_TIMEOUT_TYPE } from '../../notifications/constants';
+import { setOverflowMenuVisible } from '../../toolbox/actions.web';
+import { setTileView } from '../actions.any';
+import { shouldDisplayTileView } from '../functions.any';
 import logger from '../logger';
 
 /**
  * The type of the React {@code Component} props of {@link TileViewButton}.
  */
 interface IProps extends AbstractButtonProps {
+
+    /**
+     * The Redux state.
+     */
+    _reduxState: IReduxState;
 
     /**
      * Whether or not tile view layout has been enabled as the user preference.
@@ -45,7 +53,16 @@ class TileViewButton<P extends IProps> extends AbstractButton<P> {
      * @returns {void}
      */
     override _handleClick() {
-        const { _tileViewEnabled, dispatch } = this.props;
+        const { _tileViewEnabled, dispatch, _reduxState } = this.props;
+
+        // 只有主持人才能切换 Tile View
+        if (!isLocalParticipantModerator(_reduxState)) {
+            dispatch(showWarningNotification({
+                titleKey: 'notify.moderatorOnlyViewChange'
+            }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+
+            return;
+        }
 
         const value = !_tileViewEnabled;
 
@@ -89,6 +106,7 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
 
     return {
         _tileViewEnabled: shouldDisplayTileView(state),
+        _reduxState: state,
         visible
     };
 }

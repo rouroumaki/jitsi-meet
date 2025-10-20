@@ -171,7 +171,7 @@ function _onFollowMeCommand(attributes: any = {}, id: string, store: IStore) {
     }
 
     const pinnedParticipant = getPinnedParticipant(state);
-    const idOfParticipantToPin = attributes.nextOnStage;
+    const idOfParticipantToPin = attributes.nextOnStage === 'livedoc' ? undefined : attributes.nextOnStage;
 
     if (typeof idOfParticipantToPin !== 'undefined'
             && (!pinnedParticipant || idOfParticipantToPin !== pinnedParticipant.id)

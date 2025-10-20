@@ -6,10 +6,13 @@ import { WithTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { withStyles } from 'tss-react/mui';
 
+declare const interfaceConfig: any;
+
 import { createScreenSharingIssueEvent } from '../../../analytics/AnalyticsEvents';
 import { sendAnalytics } from '../../../analytics/functions';
 import { IReduxState, IStore } from '../../../app/types';
 import Avatar from '../../../base/avatar/components/Avatar';
+import { openDialog } from '../../../base/dialog/actions';
 import { isMobileBrowser } from '../../../base/environment/utils';
 import { translate } from '../../../base/i18n/functions';
 import { JitsiTrackEvents } from '../../../base/lib-jitsi-meet';
@@ -21,6 +24,7 @@ import {
     getParticipantByIdOrUndefined,
     getScreenshareParticipantIds,
     hasRaisedHand,
+    isLocalParticipantModerator,
     isLocalScreenshareParticipant,
     isScreenShareParticipant,
     isSharedIframeParticipant,
@@ -60,6 +64,7 @@ import {
     showGridInVerticalView
 } from '../../functions';
 
+import ParticipantVideoDialog from './ParticipantVideoDialog';
 import ThumbnailAudioIndicator from './ThumbnailAudioIndicator';
 import ThumbnailBottomIndicators from './ThumbnailBottomIndicators';
 import ThumbnailTopIndicators from './ThumbnailTopIndicators';
@@ -147,6 +152,11 @@ export interface IProps extends WithTranslation {
      * Whether the live doc is active.
      */
     _isLiveDocActive: boolean;
+
+    /**
+     * Whether or not the local participant is a moderator.
+     */
+    _isLocalParticipantModerator: boolean;
 
     /**
      * Whether we are currently running in a mobile browser.
@@ -748,18 +758,19 @@ class Thumbnail extends Component<IProps, IState> {
      * @returns {void}
      */
     _onClick() {
-        const { _participant, dispatch, _stageFilmstripLayout, _isLiveDocActive } = this.props;
-        const { id, pinned } = _participant;
+        const { _participant, dispatch, _isLiveDocActive, _isCurrentlyOnLargeVideo } = this.props;
+        const { id } = _participant;
 
-        if (_isLiveDocActive) {
+        // if (_isLiveDocActive) {
+        //     return;
+        // }
+
+        if (_isCurrentlyOnLargeVideo) {
             return;
         }
 
-        if (_stageFilmstripLayout) {
-            dispatch(togglePinStageParticipant(id));
-        } else {
-            dispatch(pinParticipant(pinned ? null : id));
-        }
+        // Always show the participant video dialog first
+        dispatch(openDialog(ParticipantVideoDialog, { participantId: id }));
     }
 
     /**
@@ -1203,27 +1214,28 @@ class Thumbnail extends Component<IProps, IState> {
         }
 
         if (isSharedIframeParticipant(_participant)) {
-            const { isHovered } = this.state;
-            const { _isMobile, _thumbnailType } = this.props;
-            const classes = withStyles.getClasses(this.props);
+            return null;
+            // const { isHovered } = this.state;
+            // const { _isMobile, _thumbnailType } = this.props;
+            // const classes = withStyles.getClasses(this.props);
 
-            return (
-                <VirtualSharedIframeParticipant
-                    classes = { classes }
-                    containerClassName = { this._getContainerClassName() }
-                    isHovered = { isHovered }
-                    isMobile = { _isMobile }
-                    onClick = { this._onClick }
-                    onMouseEnter = { this._onMouseEnter }
-                    onMouseLeave = { this._onMouseLeave }
-                    onMouseMove = { this._onMouseMove }
-                    onTouchEnd = { this._onTouchEnd }
-                    onTouchMove = { this._onTouchMove }
-                    onTouchStart = { this._onTouchStart }
-                    participantId = { _participant.id }
-                    styles = { this._getStyles() }
-                    thumbnailType = { _thumbnailType } />
-            );
+            // return (
+            //     <VirtualSharedIframeParticipant
+            //         classes = { classes }
+            //         containerClassName = { this._getContainerClassName() }
+            //         isHovered = { isHovered }
+            //         isMobile = { _isMobile }
+            //         onClick = { this._onClick }
+            //         onMouseEnter = { this._onMouseEnter }
+            //         onMouseLeave = { this._onMouseLeave }
+            //         onMouseMove = { this._onMouseMove }
+            //         onTouchEnd = { this._onTouchEnd }
+            //         onTouchMove = { this._onTouchMove }
+            //         onTouchStart = { this._onTouchStart }
+            //         participantId = { _participant.id }
+            //         styles = { this._getStyles() }
+            //         thumbnailType = { _thumbnailType } />
+            // );
         }
 
         if (_isVirtualScreenshareParticipant) {
@@ -1411,6 +1423,7 @@ function _mapStateToProps(state: IReduxState, ownProps: any): Object {
         _isAudioOnly: Boolean(state['features/base/audio-only'].enabled),
         _isCurrentlyOnLargeVideo: participantCurrentlyOnLargeVideo,
         _isDominantSpeakerDisabled: interfaceConfig.DISABLE_DOMINANT_SPEAKER_INDICATOR,
+        _isLocalParticipantModerator: isLocalParticipantModerator(state),
         _isMobile,
         _isMobilePortrait,
         _isScreenSharing: _videoTrack?.videoType === 'desktop',

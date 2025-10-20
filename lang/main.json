@@ -558,6 +558,14 @@
     "filmstrip": {
         "accessibilityLabel": {
             "heading": "Video thumbnails"
+        },
+        "participantVideoDialog": {
+            "title": "{{participantName}}'s Video",
+            "videoEnabled": "Video enabled",
+            "videoDisabled": "Video disabled",
+            "pinParticipant": "Pin to main video",
+            "unpinParticipant": "Unpin from main video",
+            "moderatorOnly": "Only moderators can pin participants to the main video"
         }
     },
     "giphy": {
@@ -648,6 +656,7 @@
     },
     "largeVideo": {
         "screenIsShared": "You are sharing your screen",
+        "screenIsSharedWithName": "You are sharing your ({{name}}) screen",
         "showMeWhatImSharing": "Show me what I'm sharing"
     },
     "liveStreaming": {
@@ -824,6 +833,7 @@
         "moderationStoppedTitle": "Moderation stopped",
         "moderationToggleDescription": "by {{participantDisplayName}}",
         "moderator": "You're now a moderator",
+        "moderatorOnlyViewChange": "Only meeting hosts can switch views",
         "muted": "You have started the conversation muted.",
         "mutedRemotelyDescription": "You can always unmute when you're ready to speak. Mute back when you're done to keep noise away from the meeting.",
         "mutedRemotelyTitle": "You've been muted by {{participantDisplayName}}",

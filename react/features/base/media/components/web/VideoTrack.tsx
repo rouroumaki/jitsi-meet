@@ -123,7 +123,7 @@ interface IProps extends AbstractVideoTrackProps {
     /**
      * A styles that will be applied on the video element.
      */
-    style: Object;
+    style?: Object;
 }
 
 /**

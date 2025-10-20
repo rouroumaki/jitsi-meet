@@ -6,6 +6,8 @@ import { translate } from '../../../base/i18n/functions';
 import { IconLivedoc } from '../../../base/icons/svg';
 import { getLocalParticipant, isLocalParticipantModerator } from '../../../base/participants/functions';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
+import { showWarningNotification } from '../../../notifications/actions';
+import { NOTIFICATION_TIMEOUT_TYPE } from '../../../notifications/constants';
 import { setTileView } from '../../../video-layout/actions.any';
 import { setSharedIframeActive, startSharedIframe } from '../../actions';
 import { SHARED_IFRAME_STATUSES } from '../../constants';
@@ -31,32 +33,35 @@ class SharedIframeButton extends AbstractButton<IProps> {
     override async _handleClick() {
         const { _isActive, _url, _conference, _localParticipant, dispatch } = this.props;
 
+        // 只有主持人才能切换 LiveDoc
+        if (!isLocalParticipantModerator(this.props._reduxState)) {
+            dispatch(showWarningNotification({
+                titleKey: 'notify.moderatorOnlyViewChange'
+            }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+
+            return;
+        }
+
         if (_isActive) {
             return;
             // 隐藏 LiveDoc
             dispatch(setSharedIframeActive(false));
 
-            // 只有主持人需要广播给其他参会者
-            if (isLocalParticipantModerator(this.props._reduxState)) {
-                sendSharedIframeCommand({
-                    conference: _conference,
-                    localParticipantId: _localParticipant?.id,
-                    status: SHARED_IFRAME_STATUSES.HIDE,
-                });
-            }
+            sendSharedIframeCommand({
+                conference: _conference,
+                localParticipantId: _localParticipant?.id,
+                status: SHARED_IFRAME_STATUSES.HIDE,
+            });
         } else if (_url) {
             // 显示 LiveDoc
             dispatch(setTileView(false));
             dispatch(setSharedIframeActive(true));
 
-            // 只有主持人需要广播给其他参会者
-            if (isLocalParticipantModerator(this.props._reduxState)) {
-                sendSharedIframeCommand({
-                    conference: _conference,
-                    localParticipantId: _localParticipant?.id,
-                    status: SHARED_IFRAME_STATUSES.SHOW,
-                });
-            }
+            sendSharedIframeCommand({
+                conference: _conference,
+                localParticipantId: _localParticipant?.id,
+                status: SHARED_IFRAME_STATUSES.SHOW,
+            });
         } else {
             // 启动新的 LiveDoc 实例
             dispatch(setTileView(false));

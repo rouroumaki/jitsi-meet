@@ -1,5 +1,9 @@
 import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from '../base/conference/actionTypes';
-import { getLocalParticipant, getScreenshareParticipantIds } from '../base/participants/functions';
+import { getCurrentConference } from '../base/conference/functions';
+import { PARTICIPANT_JOINED } from '../base/participants/actionTypes';
+import { participantJoined, pinParticipant } from '../base/participants/actions';
+import { getLocalParticipant, getScreenshareParticipantIds, isLocalParticipantModerator } from '../base/participants/functions';
+import { FakeParticipant } from '../base/participants/types';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { TRACK_ADDED, TRACK_REMOVED, TRACK_UPDATED } from '../base/tracks/actionTypes';
 import { showLoadingNotification } from '../notifications/actions';
@@ -7,7 +11,7 @@ import { setTileView } from '../video-layout/actions.any';
 
 import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState, setWasActiveBeforeScreenshare } from './actions';
 import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
-import { createOrUpdateInstantAccount } from './functions';
+import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
 MiddlewareRegistry.register(store => next => action => {
     const result = next(action);
@@ -23,12 +27,13 @@ MiddlewareRegistry.register(store => next => action => {
                         value,
                         attributes,
                     }: {
-                        attributes: { from: string; state: string; token: string; };
+                        attributes: { from: string; isShow?: string; state: string; token: string; };
                         value: string;
                     }) => {
                         const ownerId = attributes.from;
                         const status = attributes.state;
                         const token = attributes.token;
+                        const isShow = attributes.isShow !== undefined ? attributes.isShow === 'true' : true;
                         const state = getState();
                         const { url: _currentUrl } = state['features/shared-iframe'] || {};
 
@@ -46,7 +51,7 @@ MiddlewareRegistry.register(store => next => action => {
                         if (status === SHARED_IFRAME_STATUSES.SHOW) {
                             // 显示 LiveDoc 视图
                             dispatch(setTileView(false)); // 关闭 tile view
-
+                            dispatch(pinParticipant('livedoc'));
                             dispatch(setSharedIframeActive(true)); // 显示 livedoc
 
                             return;
@@ -59,12 +64,15 @@ MiddlewareRegistry.register(store => next => action => {
                             return;
                         }
 
-                        // 显示 loading notification
-                        dispatch(showLoadingNotification({
-                            title: 'Loading LiveDoc View, please wait ',
-                        }));
+                        if (_currentUrl) {
+                            return;
+                        }
 
                         try {
+                            // 显示 loading notification
+                            dispatch(showLoadingNotification({
+                                title: 'Loading LiveDoc View, please wait ',
+                            }));
 
                             const localParticipant = getLocalParticipant(getState());
 
@@ -87,6 +95,13 @@ MiddlewareRegistry.register(store => next => action => {
 
                             url = url + '&usetoken=1&fromjitsi=1';
 
+                            dispatch(participantJoined({
+                                conference,
+                                fakeParticipant: FakeParticipant.SharedIframe,
+                                id: 'livedoc',
+                                name: 'Shared Iframe'
+                            }));
+
                             // // If this is a new iframe or the URL changed, create a new participant
                             // if (!currentUrl || currentUrl !== url) {
                             //     dispatch(participantJoined({
@@ -108,9 +123,9 @@ MiddlewareRegistry.register(store => next => action => {
                                 })
                             );
 
-                            // 如果是新参会者接收到 livedoc 状态，自动显示
-                            if (status === SHARED_IFRAME_STATUSES.START && ownerId !== localParticipant?.id) {
+                            if (status === SHARED_IFRAME_STATUSES.START && isShow) {
                                 dispatch(setTileView(false)); // 关闭 tile view
+                                dispatch(pinParticipant('livedoc'));
                                 dispatch(setSharedIframeActive(true)); // 显示 livedoc
                             }
                         } finally {
@@ -123,6 +138,37 @@ MiddlewareRegistry.register(store => next => action => {
     case CONFERENCE_LEFT: {
         dispatch(resetSharedIframeState());
         // dispatch(hideLoadingNotification());
+        break;
+    }
+    case PARTICIPANT_JOINED: {
+        // 当新参会者加入时，如果livedoc处于活跃状态且当前用户是主持人，重新发送livedoc状态
+        const { participant } = action;
+
+        // 只处理真实的参会者，跳过fake participants
+        if (participant?.fakeParticipant) {
+            break;
+        }
+
+        const state = getState();
+        const { url, active, ownerId } = state['features/shared-iframe'] || {};
+        const localParticipant = getLocalParticipant(state);
+        const conference = getCurrentConference(state);
+
+        // 只有主持人且livedoc处于START状态时才重新发送（通过url和ownerId判断）
+        if (isLocalParticipantModerator(state) && url && ownerId && conference) {
+            // 获取token
+            const localToken = localStorage.getItem('KloudUserToken');
+
+            // 重新发送livedoc状态给新参会者
+            sendSharedIframeCommand({
+                conference,
+                localParticipantId: localParticipant?.id,
+                status: SHARED_IFRAME_STATUSES.START,
+                url: url.split('?')[0], // 去掉URL中的参数
+                token: localToken || '',
+                isShow: active,
+            });
+        }
         break;
     }
     case TRACK_ADDED:

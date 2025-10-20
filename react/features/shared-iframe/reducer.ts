@@ -23,7 +23,6 @@ ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = 
     case SET_SHARED_IFRAME_STATE:
         return {
             ...state,
-            active: action.status !== 'stop',
             ownerId: action.ownerId ?? state.ownerId,
             url: action.url ?? state.url,
             livedocInstanceId: action.livedocInstanceId ?? state.livedocInstanceId,

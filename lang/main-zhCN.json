@@ -588,6 +588,7 @@
     },
     "largeVideo": {
         "screenIsShared": "你正在共享你的屏幕",
+        "screenIsSharedWithName": "你正在共享你({{name}})的屏幕",
         "showMeWhatImSharing": "让我看看我正在共享什么"
     },
     "liveStreaming": {
@@ -753,6 +754,7 @@
         "moderationStoppedTitle": "停止主持",
         "moderationToggleDescription": "由{{participantDisplayName}}",
         "moderator": "你现在是主持人了",
+        "moderatorOnlyViewChange": "只有会议主持人才能切换视图",
         "muted": "你已经开始了通话，并处于静音状态。",
         "mutedRemotelyDescription": "当你准备好发言时，你可以随时解除静音。当发言结束之后后再调回静音，让会议保持安静。",
         "mutedRemotelyTitle": "{{participantDisplayName}} 已将你静音",

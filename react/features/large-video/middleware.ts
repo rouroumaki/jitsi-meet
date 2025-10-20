@@ -60,7 +60,7 @@ MiddlewareRegistry.register(store => next => action => {
         const conference = getCurrentConference(state);
 
         // 如果点击了参会者，隐藏 LiveDoc 视图
-        if (action.participant?.id) {
+        if (action.participant?.id && action.participant?.id !== 'livedoc') {
             const { active: isLiveDocActive } = state['features/shared-iframe'] || { active: false };
 
             if (isLiveDocActive) {
@@ -89,7 +89,7 @@ MiddlewareRegistry.register(store => next => action => {
         const conference = getCurrentConference(state);
 
         // 如果点击了参会者，隐藏 LiveDoc 视图
-        if (action.participantId) {
+        if (action.participantId && action.participantId !== 'livedoc') {
             const { active: isLiveDocActive } = state['features/shared-iframe'] || { active: false };
 
             if (isLiveDocActive) {

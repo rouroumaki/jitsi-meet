@@ -60,8 +60,10 @@ export function sendSharedIframeCommand({
     status,
     url,
     token,
+    isShow,
 }: {
     conference?: IJitsiConference;
+    isShow?: boolean;
     localParticipantId?: string;
     status: string;
     token?: string;
@@ -73,6 +75,7 @@ export function sendSharedIframeCommand({
             from: localParticipantId,
             state: status,
             token,
+            isShow,
         },
     });
 }
