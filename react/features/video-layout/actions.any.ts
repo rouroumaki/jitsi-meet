@@ -1,6 +1,5 @@
 import { IStore } from '../app/types';
 import { isTileViewModeDisabled } from '../filmstrip/functions.any';
-import { setSharedIframeActive } from '../shared-iframe/actions';
 
 import {
     SET_TILE_VIEW,
@@ -44,11 +43,6 @@ export function setTileView(enabled?: boolean) {
                 type: SET_TILE_VIEW,
                 enabled
             });
-
-            if (enabled) {
-                // 进入 tile view 时隐藏 livedoc
-                dispatch(setSharedIframeActive(false));
-            }
         }
     };
 }

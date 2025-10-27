@@ -4,12 +4,13 @@ import { connect } from 'react-redux';
 // @ts-ignore
 import Filmstrip from '../../../../../modules/UI/videolayout/Filmstrip';
 import { IReduxState } from '../../../app/types';
-// import { FakeParticipant } from '../../../base/participants/types';
+import { FakeParticipant } from '../../../base/participants/types';
 import { getVerticalViewMaxWidth } from '../../../filmstrip/functions.web';
-// import { hideLoadingNotification } from '../../../notifications/actions';
+import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { hideLoadingNotification } from '../../../notifications/actions';
 import { showToolbox } from '../../../toolbox/actions.web';
-// import { getToolboxHeight } from '../../../toolbox/functions.web';
+import { SHARED_IFRAME_STATUSES } from '../../constants';
+import { sendSharedIframeCommand } from '../../functions';
 
 interface IProps {
     /**
@@ -48,14 +49,14 @@ interface IProps {
     isEnabled: boolean;
 
     /**
-     * Whether the shared iframe is currently active.
-     */
-    isIframeShared: boolean;
-
-    /**
      * Whether the user is actively resizing the filmstrip.
      */
     isResizing: boolean;
+
+    /**
+     * Whether the shared iframe should be shown on stage.
+     */
+    onStage: boolean;
 
 }
 
@@ -94,6 +95,17 @@ class SharedIframe extends Component<IProps> {
             case 'onkloudloaded':
                 this.props.dispatch(hideLoadingNotification());
                 break;
+                // case 'onkloudjoinmeeting':
+                //     const { iframeUrl } = this.props;
+
+                //     const url = iframeUrl?.split('?')[0];
+
+                //     sendSharedIframeCommand({
+                //         conference: '',
+                //         status: SHARED_IFRAME_STATUSES.START,
+                //         url,
+                //     });
+
             default:
                 break;
             }
@@ -169,7 +181,7 @@ class SharedIframe extends Component<IProps> {
      * @returns {React$Element}
      */
     override render() {
-        const { isEnabled, isResizing, isIframeShared, iframeUrl } = this.props;
+        const { isEnabled, isResizing, onStage, iframeUrl } = this.props;
 
         // 仅在没有 url 时不渲染；有 url 时始终挂载，避免重新加载 iframe
         if (!isEnabled || !iframeUrl) {
@@ -178,9 +190,7 @@ class SharedIframe extends Component<IProps> {
 
         const style: any = this.getDimensions();
 
-        // onStage 原来是onStage逻辑 用于判断participant是否是sharediframe
-        if (!isIframeShared) {
-            // eslint-disable-next-line react-native/no-inline-styles
+        if (!onStage) {
             style.display = 'none';
         }
 
@@ -210,11 +220,11 @@ class SharedIframe extends Component<IProps> {
  * @returns {IProps}
  */
 function _mapStateToProps(state: IReduxState) {
-    const { url: iframeUrl, active } = state['features/shared-iframe'] || { active: false };
+    const { url: iframeUrl } = state['features/shared-iframe'] || {};
     const { clientHeight, videoSpaceWidth } = state['features/base/responsive-ui'];
     const { visible, isResizing } = state['features/filmstrip'];
     const { isResizing: isChatResizing } = state['features/chat'];
-    const isIframeShared = Boolean(active && iframeUrl);
+    const onStage = getLargeVideoParticipant(state)?.fakeParticipant === FakeParticipant.SharedIframe;
 
     return {
         clientHeight,
@@ -223,8 +233,8 @@ function _mapStateToProps(state: IReduxState) {
         filmstripWidth: getVerticalViewMaxWidth(state),
         isEnabled: true, // Shared iframe is always enabled when available
         isResizing: isResizing || isChatResizing,
-        isIframeShared,
-        iframeUrl
+        onStage,
+        iframeUrl,
     };
 }
 

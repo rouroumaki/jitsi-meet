@@ -2,12 +2,15 @@ import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { PARTICIPANT_LEFT, PIN_PARTICIPANT } from '../base/participants/actionTypes';
 import { pinParticipant } from '../base/participants/actions';
-import { getParticipantById, getPinnedParticipant } from '../base/participants/functions';
+import { getDominantSpeakerParticipant, getLocalParticipant, getParticipantById, getPinnedParticipant } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import StateListenerRegistry from '../base/redux/StateListenerRegistry';
 import { SET_DOCUMENT_EDITING_STATUS } from '../etherpad/actionTypes';
 import { isStageFilmstripEnabled } from '../filmstrip/functions';
 import { isFollowMeActive } from '../follow-me/functions';
+import { selectParticipantInLargeVideo } from '../large-video/actions.any';
+import { getLargeVideoParticipant } from '../large-video/functions';
+import { isSharedIframePlaying } from '../shared-iframe/functions';
 
 import { SET_TILE_VIEW } from './actionTypes';
 import { setTileView } from './actions';
@@ -70,6 +73,22 @@ MiddlewareRegistry.register(store => next => action => {
         if (action.enabled && !stageFilmstrip && getPinnedParticipant(state)) {
             store.dispatch(pinParticipant(null));
         }
+        // else if (action.enabled === false) {
+        //     // @ts-ignore
+        //     const { pinned } = getLargeVideoParticipant(state);
+
+        //     if (isSharedIframePlaying(state) && pinned) {
+        //         break;
+        //     }
+        //     // 立即选择一个非 LiveDoc 的参与者显示到大画面，优先选择当前主讲人，否则回退到本地参会者
+        //     const dominant = getDominantSpeakerParticipant(state);
+        //     const local = getLocalParticipant(state);
+        //     const targetId = dominant && !dominant.local ? dominant.id : local?.id;
+
+        //     if (targetId) {
+        //         store.dispatch(selectParticipantInLargeVideo(targetId));
+        //     }
+        // }
         break;
     }
     }

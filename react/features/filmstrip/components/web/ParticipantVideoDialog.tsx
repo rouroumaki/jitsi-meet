@@ -101,13 +101,10 @@ function ParticipantVideoDialog({
     const participantName = displayName || name || t('participant.unknown');
 
     const handlePinParticipant = useCallback(() => {
-        if (_stageFilmstripLayout) {
-            dispatch(togglePinStageParticipant(id));
-        } else {
-            dispatch(pinParticipant(pinned ? null : id));
-        }
+        dispatch(pinParticipant(id));
+        dispatch(togglePinStageParticipant(id));
         dispatch(hideDialog());
-    }, [ dispatch, _stageFilmstripLayout, id, pinned ]);
+    }, [ dispatch, id ]);
 
     const renderActionButtons = () => {
         if (_isLocalParticipantModerator) {

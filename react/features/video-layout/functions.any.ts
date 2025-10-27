@@ -4,7 +4,8 @@ import { getFeatureFlag } from '../base/flags/functions';
 import { pinParticipant } from '../base/participants/actions';
 import { getParticipantCount, getPinnedParticipant } from '../base/participants/functions';
 import { FakeParticipant } from '../base/participants/types';
-import { isStageFilmstripAvailable, isTileViewModeDisabled } from '../filmstrip/functions';
+import { isStageFilmstripAvailable, isTileViewModeDisabled } from '../filmstrip/functions.web';
+import { isSharedIframePlaying } from '../shared-iframe/functions';
 import { isVideoPlaying } from '../shared-video/functions';
 import { VIDEO_QUALITY_LEVELS } from '../video-quality/constants';
 import { getReceiverVideoQualityLevel } from '../video-quality/functions';
@@ -22,8 +23,8 @@ import { LAYOUTS } from './constants';
  * pin any screen shares.
  */
 export function getAutoPinSetting() {
-    return typeof interfaceConfig === 'object'
-        ? interfaceConfig.AUTO_PIN_LATEST_SCREEN_SHARE
+    return typeof (window as any).interfaceConfig === 'object'
+        ? (window as any).interfaceConfig.AUTO_PIN_LATEST_SCREEN_SHARE
         : 'remote-only';
 }
 
@@ -40,7 +41,7 @@ export function getCurrentLayout(state: IReduxState) {
         return undefined;
     } else if (shouldDisplayTileView(state)) {
         return LAYOUTS.TILE_VIEW;
-    } else if (interfaceConfig.VERTICAL_FILMSTRIP) {
+    } else if ((window as any).interfaceConfig?.VERTICAL_FILMSTRIP) {
         if (isStageFilmstripAvailable(state, 2)) {
             return LAYOUTS.STAGE_FILMSTRIP_VIEW;
         }
@@ -102,11 +103,14 @@ export function shouldDisplayTileView(state: IReduxState) {
         // There is a shared YouTube video in the meeting
         || isVideoPlaying(state)
 
+        // There is a shared iframe (LiveDoc) in the meeting
+        || isSharedIframePlaying(state)
+
         // We want jibri to use stage view by default
         || iAmRecorder
     );
 
-    return !shouldDisplayNormalMode;
+    return false;
 }
 
 /**
@@ -132,7 +136,7 @@ export function updateAutoPinnedParticipant(
     // Unpin the screen share when the screen sharing participant leaves. Switch to tile view if no other
     // participant was pinned before screen share was auto-pinned, pin the previously pinned participant otherwise.
     if (!remoteScreenShares?.length) {
-        let participantId = null;
+        let participantId: string | null = null;
 
         if (pinned && !screenShares.find(share => share === pinned.id)) {
             participantId = pinned.id;

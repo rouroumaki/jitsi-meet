@@ -8,11 +8,12 @@ import {
     getParticipantById,
     getPinnedParticipant,
     getRemoteParticipants,
+    getScreenshareParticipantIds,
     getVirtualScreenshareParticipantByOwnerId
 } from '../base/participants/functions';
 import { toState } from '../base/redux/functions';
-import { isStageFilmstripAvailable } from '../filmstrip/functions';
-import { getAutoPinSetting } from '../video-layout/functions';
+import { isStageFilmstripAvailable } from '../filmstrip/functions.web';
+import { getAutoPinSetting } from '../video-layout/functions.any';
 
 import {
     SELECT_LARGE_VIDEO_PARTICIPANT,
@@ -145,25 +146,38 @@ function _electParticipantInLargeVideo(state: IReduxState) {
         return participant.id;
     }
 
+    // // 如果 LiveDoc 正在播放，保持它在舞台上
+    // if (isSharedIframePlaying(state)) {
+    //     return 'livedoc';
+    // }
+
     const autoPinSetting = getAutoPinSetting();
 
     if (autoPinSetting) {
-        // when the setting auto_pin_latest_screen_share is true as spot does, prioritize local screenshare
-        if (autoPinSetting === true) {
-            const localScreenShareParticipant = getLocalScreenShareParticipant(state);
+        // 获取所有屏幕共享参与者ID（包括本地和远程）
+        const allScreenshareParticipantIds = getScreenshareParticipantIds(state);
 
-            if (localScreenShareParticipant) {
-                return localScreenShareParticipant.id;
+        if (allScreenshareParticipantIds.length > 0) {
+            // 获取所有屏幕共享参与者的虚拟ID
+            const allScreenshareVirtualIds = allScreenshareParticipantIds.map(participantId => {
+                // 如果是本地参与者，直接返回本地屏幕共享参与者ID
+                if (participantId === getLocalParticipant(state)?.id) {
+                    const localScreenShare = getLocalScreenShareParticipant(state);
+
+                    return localScreenShare?.id;
+                }
+
+                // 如果是远程参与者，获取对应的虚拟屏幕共享参与者ID
+                return getVirtualScreenshareParticipantByOwnerId(state, participantId)?.id;
+            }).filter(Boolean); // 过滤掉undefined值
+
+            // 如果有虚拟屏幕共享参与者，选择最后一个（最新的）
+            if (allScreenshareVirtualIds.length > 0) {
+                return allScreenshareVirtualIds[allScreenshareVirtualIds.length - 1];
             }
         }
-
-        // Pick the most recent remote screenshare that was added to the conference.
-        const remoteScreenShares = state['features/video-layout'].remoteScreenShares;
-
-        if (remoteScreenShares?.length) {
-            return remoteScreenShares[remoteScreenShares.length - 1];
-        }
     }
+
 
     // Next, pick the dominant speaker (other than self).
     participant = getDominantSpeakerParticipant(state);
@@ -186,7 +200,9 @@ function _electParticipantInLargeVideo(state: IReduxState) {
     }
 
     // Last, select the participant that joined last (other than poltergist or other bot type participants).
-    const participants = [ ...getRemoteParticipants(state).values() ];
+    let participants = [ ...getRemoteParticipants(state).values() ];
+
+    participants = participants.filter(p => p.id !== 'livedoc');
 
     for (let i = participants.length; i > 0 && !participant; i--) {
         const p = participants[i - 1];

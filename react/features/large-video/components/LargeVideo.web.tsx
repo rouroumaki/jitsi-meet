@@ -15,8 +15,8 @@ import { isSpotTV } from '../../base/util/spot';
 import StageParticipantNameLabel from '../../display-name/components/web/StageParticipantNameLabel';
 import { FILMSTRIP_BREAKPOINT } from '../../filmstrip/constants';
 import { getVerticalViewMaxWidth, isFilmstripResizable } from '../../filmstrip/functions.web';
-import SharedVideo from '../../shared-video/components/web/SharedVideo';
 import SharedIframe from '../../shared-iframe/components/web/SharedIframe';
+import SharedVideo from '../../shared-video/components/web/SharedVideo';
 import Captions from '../../subtitles/components/web/Captions';
 import { areClosedCaptionsEnabled } from '../../subtitles/functions.any';
 import { setTileView } from '../../video-layout/actions.web';
@@ -69,6 +69,7 @@ interface IProps {
      * Whether or not the local screen share is on large-video.
      */
     _isScreenSharing: boolean;
+
 
     /**
      * The large video participant id.

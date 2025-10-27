@@ -30,7 +30,7 @@ import {
     isSharedIframeParticipant,
     isWhiteboardParticipant
 } from '../../../base/participants/functions';
-import { IParticipant } from '../../../base/participants/types';
+import { FakeParticipant, IParticipant } from '../../../base/participants/types';
 import { ASPECT_RATIO_NARROW } from '../../../base/responsive-ui/constants';
 import Tooltip from '../../../base/tooltip/components/Tooltip';
 import { trackStreamingStatusChanged } from '../../../base/tracks/actions';
@@ -43,9 +43,10 @@ import { ITrack } from '../../../base/tracks/types';
 import { getVideoObjectPosition } from '../../../face-landmarks/functions';
 import { hideGif, showGif } from '../../../gifs/actions';
 import { getGifDisplayMode, getGifForParticipant } from '../../../gifs/functions';
+import { getLargeVideoParticipant } from '../../../large-video/functions';
 import PresenceLabel from '../../../presence-status/components/PresenceLabel';
 import { LAYOUTS } from '../../../video-layout/constants';
-import { getCurrentLayout } from '../../../video-layout/functions.web';
+import { getCurrentLayout, shouldDisplayTileView } from '../../../video-layout/functions.web';
 import { togglePinStageParticipant } from '../../actions';
 import {
     DISPLAY_MODE_TO_CLASS_NAME,
@@ -341,6 +342,12 @@ const defaultStyles = (theme: Theme) => {
         activeSpeaker: {
             '& .active-speaker-indicator': {
                 boxShadow: `inset 0px 0px 0px 3px ${theme.palette.action01Hover} !important`
+            }
+        },
+
+        largeVideoParticipant: {
+            '& .large-video-participant-indicator': {
+                boxShadow: 'inset 0px 0px 0px 3px #EC627E !important'
             }
         },
 
@@ -758,19 +765,25 @@ class Thumbnail extends Component<IProps, IState> {
      * @returns {void}
      */
     _onClick() {
-        const { _participant, dispatch, _isLiveDocActive, _isCurrentlyOnLargeVideo } = this.props;
-        const { id } = _participant;
-
-        // if (_isLiveDocActive) {
-        //     return;
-        // }
+        const { _participant, dispatch, _isLiveDocActive, _isCurrentlyOnLargeVideo, _stageFilmstripLayout, _isLocalParticipantModerator } = this.props;
+        const { id, pinned } = _participant;
 
         if (_isCurrentlyOnLargeVideo) {
             return;
         }
 
-        // Always show the participant video dialog first
-        dispatch(openDialog(ParticipantVideoDialog, { participantId: id }));
+        if (!_isLiveDocActive && _isLocalParticipantModerator) {
+            dispatch(pinParticipant(id));
+            dispatch(togglePinStageParticipant(id));
+            // if (_stageFilmstripLayout) {
+            //     dispatch(togglePinStageParticipant(id));
+            // } else {
+            //     dispatch(pinParticipant(id));
+            // }
+        } else {
+            dispatch(openDialog(ParticipantVideoDialog, { participantId: id }));
+        }
+
     }
 
     /**
@@ -960,6 +973,7 @@ class Thumbnail extends Component<IProps, IState> {
         let className = 'videocontainer';
         const { displayMode } = this.state;
         const {
+            _isCurrentlyOnLargeVideo,
             _isDominantSpeakerDisabled,
             _participant,
             _raisedHand,
@@ -975,6 +989,9 @@ class Thumbnail extends Component<IProps, IState> {
 
         if (!_isDominantSpeakerDisabled && _participant?.dominantSpeaker) {
             className += ` ${classes.activeSpeaker} dominant-speaker`;
+        }
+        if (_isCurrentlyOnLargeVideo && !_participant?.dominantSpeaker && _thumbnailType !== THUMBNAIL_TYPE.TILE) {
+            className += ` ${classes.largeVideoParticipant}`;
         }
         if (_thumbnailType !== THUMBNAIL_TYPE.TILE && _participant?.pinned) {
             className += ' videoContainerFocused';
@@ -1168,6 +1185,10 @@ class Thumbnail extends Component<IProps, IState> {
                     className = { clsx(classes.borderIndicator,
                     _gifSrc && classes.borderIndicatorOnTop,
                     'raised-hand-border') } />
+                <div
+                    className = { clsx(classes.borderIndicator,
+                    _gifSrc && classes.borderIndicatorOnTop,
+                    'large-video-participant-indicator') } />
                 <div
                     className = { clsx(classes.borderIndicator,
                     _gifSrc && classes.borderIndicatorOnTop,
@@ -1440,7 +1461,7 @@ function _mapStateToProps(state: IReduxState, ownProps: any): Object {
         _videoTrack,
         ...size,
         _gifSrc: mode === 'chat' ? null : gifSrc,
-        _isLiveDocActive: state['features/shared-iframe'].active
+        _isLiveDocActive: getLargeVideoParticipant(state)?.fakeParticipant === FakeParticipant.SharedIframe && !shouldDisplayTileView(state),
     };
 }
 

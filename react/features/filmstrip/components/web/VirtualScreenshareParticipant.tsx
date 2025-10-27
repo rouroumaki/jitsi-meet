@@ -167,6 +167,38 @@ const VirtualScreenshareParticipant = ({
             </div>
             {shouldDisplayTintBackground && <div className = { classes?.tintBackground } />}
             <div
+                className = 'raised-hand-border'
+                style = {{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    zIndex: 9,
+                    borderRadius: '4px',
+                    pointerEvents: 'none'
+                }} />
+            {thumbnailType !== 'TILE' && (
+                <div
+                    className = 'large-video-participant-indicator'
+                    style = {{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        zIndex: 9,
+                        borderRadius: '4px',
+                        pointerEvents: 'none'
+                    }} />
+            )}
+            <div
+                className = 'active-speaker-indicator'
+                style = {{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    zIndex: 9,
+                    borderRadius: '4px',
+                    pointerEvents: 'none'
+                }} />
+            <div
                 className = { cx(classes?.indicatorsContainer,
                         classes?.indicatorsBottomContainer,
                         currentLayout === LAYOUTS.TILE_VIEW && 'tile-view-mode'

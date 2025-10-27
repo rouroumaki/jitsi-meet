@@ -18,6 +18,7 @@ export const colorMap = {
     ui08: 'ui21',
     ui09: 'ui08',
     ui10: 'ui04',
+    ui26: 'ui26',
 
     // ----- Actions -----
 

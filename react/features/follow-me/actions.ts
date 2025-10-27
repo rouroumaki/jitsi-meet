@@ -1,4 +1,6 @@
 import {
+    SET_FOLLOW_ME_DEBOUNCE_TIMER,
+    SET_FOLLOW_ME_LAST_SEND_TIME,
     SET_FOLLOW_ME_MODERATOR,
     SET_FOLLOW_ME_STATE
 } from './actionTypes';
@@ -35,5 +37,37 @@ export function setFollowMeState(state?: Object) {
     return {
         type: SET_FOLLOW_ME_STATE,
         state
+    };
+}
+
+/**
+ * Sets the last send time for follow-me commands.
+ *
+ * @param {number} lastSendTime - The timestamp when the last command was sent.
+ * @returns {{
+ *     type: SET_FOLLOW_ME_LAST_SEND_TIME,
+ *     lastSendTime: number
+ * }}
+ */
+export function setFollowMeLastSendTime(lastSendTime: number) {
+    return {
+        type: SET_FOLLOW_ME_LAST_SEND_TIME,
+        lastSendTime
+    };
+}
+
+/**
+ * Sets the debounce timer for follow-me commands.
+ *
+ * @param {number} timer - The timer ID for the debounce timeout.
+ * @returns {{
+ *     type: SET_FOLLOW_ME_DEBOUNCE_TIMER,
+ *     timer: number
+ * }}
+ */
+export function setFollowMeDebounceTimer(timer: number) {
+    return {
+        type: SET_FOLLOW_ME_DEBOUNCE_TIMER,
+        timer
     };
 }

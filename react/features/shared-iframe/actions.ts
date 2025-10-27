@@ -29,17 +29,18 @@ export function resetSharedIframeState() {
     } as const;
 }
 
-export function setSharedIframeActive(active: boolean) {
-    return {
-        type: SET_SHARED_IFRAME_ACTIVE,
-        active
-    } as const;
-}
 
 export function setWasActiveBeforeScreenshare(wasActive: boolean) {
     return {
         type: SET_WAS_ACTIVE_BEFORE_SCREENSHARE,
         wasActive
+    } as const;
+}
+
+export function setSharedIframeActive(active: boolean) {
+    return {
+        type: SET_SHARED_IFRAME_ACTIVE,
+        active
     } as const;
 }
 

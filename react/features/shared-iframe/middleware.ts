@@ -2,14 +2,13 @@ import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from '../base/conference
 import { getCurrentConference } from '../base/conference/functions';
 import { PARTICIPANT_JOINED } from '../base/participants/actionTypes';
 import { participantJoined, pinParticipant } from '../base/participants/actions';
-import { getLocalParticipant, getScreenshareParticipantIds, isLocalParticipantModerator } from '../base/participants/functions';
+import { getLocalParticipant, isLocalParticipantModerator } from '../base/participants/functions';
 import { FakeParticipant } from '../base/participants/types';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
-import { TRACK_ADDED, TRACK_REMOVED, TRACK_UPDATED } from '../base/tracks/actionTypes';
+import { getLargeVideoParticipant } from '../large-video/functions';
 import { showLoadingNotification } from '../notifications/actions';
-import { setTileView } from '../video-layout/actions.any';
 
-import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState, setWasActiveBeforeScreenshare } from './actions';
+import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState } from './actions';
 import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
 import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
@@ -35,13 +34,14 @@ MiddlewareRegistry.register(store => next => action => {
                         const token = attributes.token;
                         const isShow = attributes.isShow !== undefined ? attributes.isShow === 'true' : true;
                         const state = getState();
-                        const { url: _currentUrl } = state['features/shared-iframe'] || {};
+                        const { url: _currentUrl, active: _active } = state['features/shared-iframe'] || {};
 
                         if (status === SHARED_IFRAME_STATUSES.STOP) {
                             // Remove the iframe participant when stopping
                             // dispatch(participantLeft(currentUrl ?? '', conference, {
                             //     fakeParticipant: FakeParticipant.SharedIframe
                             // }));
+                            dispatch(setSharedIframeActive(false));
                             dispatch(resetSharedIframeState());
 
                             return;
@@ -49,17 +49,16 @@ MiddlewareRegistry.register(store => next => action => {
 
                         // 处理视图显示/隐藏状态
                         if (status === SHARED_IFRAME_STATUSES.SHOW) {
-                            // 显示 LiveDoc 视图
-                            dispatch(setTileView(false)); // 关闭 tile view
+                            console.log('status === SHARED_IFRAME_STATUSES.SHOW', _active);
+                            // dispatch(setTileView(false)); // 关闭 tile view
                             dispatch(pinParticipant('livedoc'));
-                            dispatch(setSharedIframeActive(true)); // 显示 livedoc
-
-                            return;
+                            dispatch(setSharedIframeActive(true));
                         }
 
                         if (status === SHARED_IFRAME_STATUSES.HIDE) {
-                            // 隐藏 LiveDoc 视图
-                            dispatch(setSharedIframeActive(false)); // 隐藏 livedoc
+                            // 隐藏 LiveDoc 视图 - 通过 unpin 来隐藏
+                            // dispatch(unpinParticipant('livedoc'));
+                            dispatch(setSharedIframeActive(false));
 
                             return;
                         }
@@ -124,9 +123,9 @@ MiddlewareRegistry.register(store => next => action => {
                             );
 
                             if (status === SHARED_IFRAME_STATUSES.START && isShow) {
-                                dispatch(setTileView(false)); // 关闭 tile view
+                                // dispatch(setTileView(false)); // 关闭 tile view
                                 dispatch(pinParticipant('livedoc'));
-                                dispatch(setSharedIframeActive(true)); // 显示 livedoc
+                                dispatch(setSharedIframeActive(true));
                             }
                         } finally {
                             // dispatch(hideLoadingNotification());
@@ -136,6 +135,7 @@ MiddlewareRegistry.register(store => next => action => {
         break;
     }
     case CONFERENCE_LEFT: {
+        dispatch(setSharedIframeActive(false));
         dispatch(resetSharedIframeState());
         // dispatch(hideLoadingNotification());
         break;
@@ -150,9 +150,10 @@ MiddlewareRegistry.register(store => next => action => {
         }
 
         const state = getState();
-        const { url, active, ownerId } = state['features/shared-iframe'] || {};
+        const { url, ownerId } = state['features/shared-iframe'] || {};
         const localParticipant = getLocalParticipant(state);
         const conference = getCurrentConference(state);
+        const isShow = getLargeVideoParticipant(state)?.fakeParticipant === FakeParticipant.SharedIframe;
 
         // 只有主持人且livedoc处于START状态时才重新发送（通过url和ownerId判断）
         if (isLocalParticipantModerator(state) && url && ownerId && conference) {
@@ -166,33 +167,34 @@ MiddlewareRegistry.register(store => next => action => {
                 status: SHARED_IFRAME_STATUSES.START,
                 url: url.split('?')[0], // 去掉URL中的参数
                 token: localToken || '',
-                isShow: active,
+                isShow: isShow,
             });
         }
         break;
     }
-    case TRACK_ADDED:
-    case TRACK_UPDATED:
-    case TRACK_REMOVED: {
-        // 检查屏幕共享状态变化
-        const state = getState();
-        const screenshareParticipantIds = getScreenshareParticipantIds(state);
+    // case TRACK_ADDED:
+    // case TRACK_UPDATED:
+    // case TRACK_REMOVED: {
+    //     // 检查屏幕共享状态变化
+    //     const state = getState();
+    //     const screenshareParticipantIds = getScreenshareParticipantIds(state);
+    //     const largeVideoParticipant = getLargeVideoParticipant(state);
+    //     const isLiveDocOnStage = largeVideoParticipant?.fakeParticipant === FakeParticipant.SharedIframe;
+    //     const { wasActiveBeforeScreenshare } = state['features/shared-iframe'] || { wasActiveBeforeScreenshare: false };
 
-        console.log('screenshareParticipantIds', screenshareParticipantIds);
-        const { active: isLiveDocActive, wasActiveBeforeScreenshare } = state['features/shared-iframe'] || { active: false };
-
-        // 如果有人开始屏幕共享且 LiveDoc 当前是显示状态，则隐藏 LiveDoc
-        if (screenshareParticipantIds.length > 0 && isLiveDocActive) {
-            // 保存当前状态，以便屏幕共享结束后恢复
-            dispatch(setWasActiveBeforeScreenshare(true));
-            dispatch(setSharedIframeActive(false));
-        } else if (screenshareParticipantIds.length === 0 && wasActiveBeforeScreenshare) {
-            // 如果屏幕共享停止且之前 LiveDoc 是显示状态，则恢复显示
-            dispatch(setSharedIframeActive(true));
-            dispatch(setWasActiveBeforeScreenshare(false));
-        }
-        break;
-    }
+    //     // 如果有人开始屏幕共享且 LiveDoc 当前在舞台上，则隐藏 LiveDoc
+    //     if (screenshareParticipantIds.length > 0 && isLiveDocOnStage) {
+    //         // 保存当前状态，以便屏幕共享结束后恢复
+    //         dispatch(setWasActiveBeforeScreenshare(true));
+    //         // 通过 unpin 来隐藏 LiveDoc
+    //         // dispatch(unpinParticipant('livedoc'));
+    //     } else if (screenshareParticipantIds.length === 0 && wasActiveBeforeScreenshare) {
+    //         // 如果屏幕共享停止且之前 LiveDoc 是显示状态，则恢复显示
+    //         dispatch(pinParticipant('livedoc'));
+    //         dispatch(setWasActiveBeforeScreenshare(false));
+    //     }
+    //     break;
+    // }
     }
 
     return result;

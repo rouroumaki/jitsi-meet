@@ -27,8 +27,8 @@ StateListenerRegistry.register(
 
         if (!equals(oldScreenSharesOrder, newScreenSharesOrder)) {
             store.dispatch(virtualScreenshareParticipantsUpdated(newScreenSharesOrder));
-
-            if (getAutoPinSetting() && !isFollowMeActive(store)) {
+            // && !isFollowMeActive(store) 为了修复主持先pin了参会者后屏幕共享 其他人不pin屏幕共享的问题 先注释掉
+            if (getAutoPinSetting()) {
                 updateAutoPinnedParticipant(oldScreenSharesOrder, store);
             }
         }

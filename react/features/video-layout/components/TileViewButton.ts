@@ -7,6 +7,7 @@ import { TILE_VIEW_ENABLED } from '../../base/flags/constants';
 import { getFeatureFlag } from '../../base/flags/functions';
 import { translate } from '../../base/i18n/functions';
 import { IconTileView } from '../../base/icons/svg';
+import { pinParticipant } from '../../base/participants/actions';
 import { isLocalParticipantModerator } from '../../base/participants/functions';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../base/toolbox/components/AbstractButton';
 import { showWarningNotification } from '../../notifications/actions';

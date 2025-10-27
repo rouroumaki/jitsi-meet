@@ -55,6 +55,7 @@ export interface IPalette {
     ui08: string;
     ui09: string;
     ui10: string;
+    ui26: string;
     uiBackground: string;
     warning01: string;
     warning02: string;

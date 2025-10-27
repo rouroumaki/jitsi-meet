@@ -191,13 +191,14 @@ StateListenerRegistry.register(
  * Listens for changes in the active participants count determine the stage participant (when
  * there's just one).
  */
-StateListenerRegistry.register(
-    /* selector */ state => state['features/filmstrip'].activeParticipants,
-    /* listener */(activeParticipants, store) => {
-        if (activeParticipants.length <= 1) {
-            store.dispatch(selectParticipantInLargeVideo());
-        }
-    });
+// StateListenerRegistry.register(
+//     /* selector */ state => state['features/filmstrip'].activeParticipants,
+//     /* listener */(activeParticipants, store) => {
+//         if (activeParticipants.length <= 1) {
+//             console.log('selectParticipantInLargeVideo', 'activeParticipants');
+//             store.dispatch(selectParticipantInLargeVideo());
+//         }
+//     });
 
 /**
  * Listens for changes to determine the size of the screenshare filmstrip.

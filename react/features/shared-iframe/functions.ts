@@ -1,4 +1,8 @@
+import { IStateful } from '../base/app/types';
 import { IJitsiConference } from '../base/conference/reducer';
+import { FakeParticipant } from '../base/participants/types';
+import { toState } from '../base/redux/functions';
+import { getLargeVideoParticipant } from '../large-video/functions';
 
 import { SHARED_IFRAME } from './constants';
 
@@ -111,4 +115,17 @@ export async function createLivedocInstance({
         console.error('创建livedoc实例失败:', error);
         throw error;
     }
+}
+
+/**
+ * Returns true if SharedIframe (LiveDoc) is currently playing/displayed.
+ *
+ * @param {IStateful} stateful - The redux store or {@code getState} function.
+ * @returns {boolean} True if SharedIframe is currently displayed in large video.
+ */
+export function isSharedIframePlaying(stateful: IStateful): boolean {
+    const state = toState(stateful);
+    const largeVideoParticipant = getLargeVideoParticipant(state);
+
+    return largeVideoParticipant?.fakeParticipant === FakeParticipant.SharedIframe;
 }
