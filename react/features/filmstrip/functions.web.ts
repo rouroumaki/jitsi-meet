@@ -22,6 +22,16 @@ import { isSharingStatus } from '../shared-video/functions';
 import { LAYOUTS } from '../video-layout/constants';
 import { getCurrentLayout, getNotResponsiveTileViewGridDimensions } from '../video-layout/functions.web';
 
+/**
+ * 过滤掉livedoc参与者.
+ *
+ * @param {string[]} participants - 参与者ID数组.
+ * @returns {string[]} 过滤后的参与者ID数组.
+ */
+export function filterOutLivedoc(participants: string[]): string[] {
+    return participants.filter(id => id !== 'livedoc');
+}
+
 import {
     ASPECT_RATIO_BREAKPOINT,
     DEFAULT_FILMSTRIP_WIDTH,
@@ -225,7 +235,11 @@ export function getNumberOfPartipantsForTileView(state: IReduxState) {
         - (iAmRecorder ? 1 : 0)
         - (disableSelfView ? localParticipantsCount : 0);
 
-    return numberOfParticipants;
+    // 排除livedoc参与者
+    const { remote } = state['features/base/participants'];
+    const hasLivedoc = Array.from(remote.keys()).includes('livedoc') ? 1 : 0;
+
+    return numberOfParticipants - hasLivedoc;
 }
 
 /**

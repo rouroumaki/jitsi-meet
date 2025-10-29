@@ -357,6 +357,10 @@ export function isWhiteboardParticipant(participant?: IParticipant): boolean {
     return participant?.fakeParticipant === FakeParticipant.Whiteboard;
 }
 
+export function isLivedocParticipant(participant?: IParticipant): boolean {
+    return participant?.fakeParticipant === FakeParticipant.SharedIframe;
+}
+
 /**
  * Returns a count of the known remote participants in the passed in redux state.
  *

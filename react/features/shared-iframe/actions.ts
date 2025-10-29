@@ -8,12 +8,12 @@ import { showLoadingNotification } from '../notifications/actions';
 import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE } from './actionTypes';
 import SharedIframeDialog from './components/web/SharedIframeDialog';
 import { SHARED_IFRAME_STATUSES } from './constants';
-import { createLivedocInstance, createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
+import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
 export function setSharedIframeState(payload: {
     livedocInstanceId?: string;
     ownerId?: string;
-    status: string;
+    status?: string;
     token?: string;
     url?: string;
 }) {
@@ -53,6 +53,35 @@ export function startSharedIframe(url: string) {
             return;
         }
 
+        dispatch(showLoadingNotification({
+            title: 'Loading LiveDoc View, please wait ',
+        }));
+
+        // 轮询等待 livedocInstanceId 准备就绪
+        const waitForLivedocInstanceId = async (maxAttempts = 30, interval = 1000): Promise<string | null> => {
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                const state = getState();
+                const { livedocInstanceId } = state['features/shared-iframe'] || {};
+
+                if (livedocInstanceId) {
+                    return livedocInstanceId;
+                }
+
+                // 如果还没有，等待一段时间后重试
+                await new Promise(resolve => setTimeout(resolve, interval));
+            }
+
+            return null;
+        };
+
+        const livedocInstanceId = await waitForLivedocInstanceId();
+
+        if (!livedocInstanceId) {
+            console.error('LiveDoc instance ID not available after waiting, please try again later');
+
+            return;
+        }
+
         // 从本地获取登录令牌
         let localToken = localStorage.getItem('KloudUserToken');
 
@@ -62,23 +91,8 @@ export function startSharedIframe(url: string) {
             localToken = anonymousToken;
         }
 
-        const jitsiInstanceId = conference.sessionId;
-
-        dispatch(showLoadingNotification({
-            title: 'Loading LiveDoc View, please wait ',
-        }));
-
-        const livedocInstanceId = await createLivedocInstance({ userToken: localToken || '', jitsiInstanceId });
-
+        // 使用已存在的 livedocInstanceId 构建 URL
         url = `https://kloud.cn/GoogleMeet/MainStage/${livedocInstanceId}/0`;
-        // dispatch(
-        //     setSharedIframeState({
-        //         status: SHARED_IFRAME_STATUSES.START,
-        //         url,
-        //         ownerId: localParticipant?.id,
-        //         token,
-        //     })
-        // );
 
         sendSharedIframeCommand({
             conference,

@@ -10,6 +10,7 @@ import {
     getLocalParticipant,
     getParticipantById,
     getParticipantDisplayName,
+    isLivedocParticipant,
     isScreenShareParticipant,
     isWhiteboardParticipant
 } from '../base/participants/functions';
@@ -131,6 +132,7 @@ MiddlewareRegistry.register(store => next => action => {
             && !isScreenShareParticipant(p)
             && !isWhiteboardParticipant(p)
             && !joinLeaveNotificationsDisabled()
+            && !isLivedocParticipant(p)
             && !p.isReplacing) {
             dispatch(showParticipantJoinedNotification(
                 getParticipantDisplayName(state, p.id)

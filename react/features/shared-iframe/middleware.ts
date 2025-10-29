@@ -1,4 +1,4 @@
-import { CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT } from '../base/conference/actionTypes';
+import { CONFERENCE_JOINED, CONFERENCE_JOIN_IN_PROGRESS, CONFERENCE_LEFT, UPDATE_CONFERENCE_METADATA } from '../base/conference/actionTypes';
 import { getCurrentConference } from '../base/conference/functions';
 import { PARTICIPANT_JOINED } from '../base/participants/actionTypes';
 import { participantJoined, pinParticipant } from '../base/participants/actions';
@@ -6,17 +6,80 @@ import { getLocalParticipant, isLocalParticipantModerator } from '../base/partic
 import { FakeParticipant } from '../base/participants/types';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { getLargeVideoParticipant } from '../large-video/functions';
-import { showLoadingNotification } from '../notifications/actions';
+import { hideLoadingNotification, showLoadingNotification } from '../notifications/actions';
 
 import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState } from './actions';
-import { SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
-import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
+import { LIVEDOC_METADATA_KEY, SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
+import { createLivedocInstance, createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
 MiddlewareRegistry.register(store => next => action => {
     const result = next(action);
     const { dispatch, getState } = store;
 
     switch (action.type) {
+    case CONFERENCE_JOINED: {
+        const { conference } = action;
+        const state = getState();
+        const localParticipant = getLocalParticipant(state);
+
+        // 检查是否已存在 livedoc instanceId
+        const existingMetadata = conference?.getMetadataHandler().getMetadata();
+        const existingLivedocInstanceId = existingMetadata?.livedoc?.instanceId;
+
+        if (!existingLivedocInstanceId) {
+            // 第一个参与者，创建 livedoc 实例
+            (async () => {
+                try {
+                    // 获取或创建用户 token
+                    let localToken = localStorage.getItem('KloudUserToken');
+
+                    if (!localToken) {
+                        localToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+                    }
+
+                    // 生成 UUID 作为会议的唯一标识符
+                    const jitsiInstanceId = crypto.randomUUID();
+
+                    const livedocInstanceId = await createLivedocInstance({
+                        userToken: localToken || '',
+                        jitsiInstanceId
+                    });
+
+                    // 保存到 conference metadata（同时保存 instanceId 与用于追踪的 jitsiInstanceId/UUID）
+                    conference?.getMetadataHandler().setMetadata(LIVEDOC_METADATA_KEY, {
+                        instanceId: livedocInstanceId,
+                        jitsiInstanceId
+                    });
+
+                    // 更新到 Redux state
+                    dispatch(setSharedIframeState({
+                        livedocInstanceId,
+                    }));
+                } catch (error) {
+                    console.error('Failed to create livedoc instance:', error);
+                }
+            })();
+        } else {
+            // 已存在，直接更新到 Redux state
+            dispatch(setSharedIframeState({
+                livedocInstanceId: existingLivedocInstanceId,
+                status: SHARED_IFRAME_STATUSES.START
+            }));
+        }
+        break;
+    }
+    case UPDATE_CONFERENCE_METADATA: {
+        const { metadata } = action;
+        const livedocInstanceId = metadata?.livedoc?.instanceId;
+
+        if (livedocInstanceId) {
+            dispatch(setSharedIframeState({
+                livedocInstanceId,
+                status: SHARED_IFRAME_STATUSES.START
+            }));
+        }
+        break;
+    }
     case CONFERENCE_JOIN_IN_PROGRESS: {
         const { conference } = action;
 
@@ -50,14 +113,11 @@ MiddlewareRegistry.register(store => next => action => {
                         // 处理视图显示/隐藏状态
                         if (status === SHARED_IFRAME_STATUSES.SHOW) {
                             console.log('status === SHARED_IFRAME_STATUSES.SHOW', _active);
-                            // dispatch(setTileView(false)); // 关闭 tile view
                             dispatch(pinParticipant('livedoc'));
                             dispatch(setSharedIframeActive(true));
                         }
 
                         if (status === SHARED_IFRAME_STATUSES.HIDE) {
-                            // 隐藏 LiveDoc 视图 - 通过 unpin 来隐藏
-                            // dispatch(unpinParticipant('livedoc'));
                             dispatch(setSharedIframeActive(false));
 
                             return;
@@ -101,18 +161,6 @@ MiddlewareRegistry.register(store => next => action => {
                                 name: 'Shared Iframe'
                             }));
 
-                            // // If this is a new iframe or the URL changed, create a new participant
-                            // if (!currentUrl || currentUrl !== url) {
-                            //     dispatch(participantJoined({
-                            //         conference,
-                            //         fakeParticipant: FakeParticipant.SharedIframe,
-                            //         id: url,
-                            //         name: 'Shared Iframe'
-                            //     }));
-
-                            //     // Pin the iframe participant to the stage
-                            //     dispatch(pinParticipant(url));
-                            // }
 
                             dispatch(
                                 setSharedIframeState({
@@ -123,12 +171,11 @@ MiddlewareRegistry.register(store => next => action => {
                             );
 
                             if (status === SHARED_IFRAME_STATUSES.START && isShow) {
-                                // dispatch(setTileView(false)); // 关闭 tile view
                                 dispatch(pinParticipant('livedoc'));
                                 dispatch(setSharedIframeActive(true));
                             }
-                        } finally {
-                            // dispatch(hideLoadingNotification());
+                        } catch {
+                            dispatch(hideLoadingNotification());
                         }
                     }
         );

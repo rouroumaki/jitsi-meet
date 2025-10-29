@@ -67,6 +67,10 @@ export interface IConferenceMetadata {
             timestamp: number;
         };
     };
+    livedoc?: {
+        instanceId: string;
+        jitsiInstanceId?: string; // UUID 作为会议唯一标识
+    };
     recording?: {
         isTranscribingEnabled: boolean;
     };

@@ -195,7 +195,7 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
         _filmstripHeight: remoteFilmstripHeight,
         _filmstripWidth: remoteFilmstripWidth,
         _hasScroll,
-        _remoteParticipants: remoteParticipants,
+        _remoteParticipants: remoteParticipants.filter(id => id !== 'livedoc'),
         _resizableFilmstrip,
         _rows: gridDimensions.rows ?? 1,
         _thumbnailWidth: _thumbnailSize?.width,

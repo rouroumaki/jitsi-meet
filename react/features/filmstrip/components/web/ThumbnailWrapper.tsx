@@ -144,8 +144,11 @@ function _mapStateToProps(state: IReduxState, ownProps: { columnIndex: number;
     const _verticalViewGrid = showGridInVerticalView(state);
     const filmstripType = ownProps.data?.filmstripType;
     const stageFilmstrip = filmstripType === FILMSTRIP_TYPE.STAGE;
-    const sortedActiveParticipants = activeParticipants.sort();
-    const remoteParticipants = stageFilmstrip ? sortedActiveParticipants : remote;
+    const sortedActiveParticipants = activeParticipants.sort().filter(id => id !== 'livedoc');
+
+    // 过滤掉livedoc参与者
+    const remoteParticipantsRaw = stageFilmstrip ? sortedActiveParticipants : remote;
+    const remoteParticipants = remoteParticipantsRaw.filter(id => id !== 'livedoc');
     const remoteParticipantsLength = remoteParticipants.length;
     const localId = getLocalParticipant(state)?.id;
 
@@ -153,6 +156,7 @@ function _mapStateToProps(state: IReduxState, ownProps: { columnIndex: number;
         const { columnIndex, rowIndex } = ownProps;
         const { tileViewDimensions, stageFilmstripDimensions, verticalViewDimensions } = state['features/filmstrip'];
         const { gridView } = verticalViewDimensions;
+
         let gridDimensions = tileViewDimensions?.gridDimensions,
             thumbnailSize = tileViewDimensions?.thumbnailSize;
 

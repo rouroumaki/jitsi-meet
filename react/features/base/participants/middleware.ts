@@ -74,6 +74,7 @@ import {
     getRaiseHandsQueue,
     getRemoteParticipants,
     hasRaisedHand,
+    isLivedocParticipant,
     isLocalParticipantModerator,
     isScreenShareParticipant,
     isWhiteboardParticipant
@@ -277,7 +278,7 @@ MiddlewareRegistry.register(store => next => action => {
     case PARTICIPANT_JOINED: {
         // Do not play sounds when a screenshare or whiteboard participant tile is created for screenshare.
         (!isScreenShareParticipant(action.participant)
-            && !isWhiteboardParticipant(action.participant)
+            && !isWhiteboardParticipant(action.participant) && !isLivedocParticipant(action.participant)
         ) && _maybePlaySounds(store, action);
 
         return _participantJoinedOrUpdated(store, next, action);
