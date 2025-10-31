@@ -3,12 +3,14 @@ import { connect } from 'react-redux';
 import { createToolbarEvent } from '../../../analytics/AnalyticsEvents';
 import { sendAnalytics } from '../../../analytics/functions';
 import { IReduxState } from '../../../app/types';
+import { openDialog } from '../../../base/dialog/actions';
 import { translate } from '../../../base/i18n/functions';
 import { IconScreenshare } from '../../../base/icons/svg';
 import JitsiMeetJS from '../../../base/lib-jitsi-meet/_';
+import { getLocalParticipant, getScreenshareParticipantIds } from '../../../base/participants/functions';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
 import { startScreenShareFlow } from '../../../screen-share/actions.web';
-import { isScreenVideoShared } from '../../../screen-share/functions';
+import InterruptShareConfirmDialog from '../../../screen-share/components/web/InterruptShareConfirmDialog';
 import { closeOverflowMenuIfOpen } from '../../actions.web';
 import { isDesktopShareButtonDisabled } from '../../functions.web';
 
@@ -17,11 +19,9 @@ interface IProps extends AbstractButtonProps {
     /**
      * Whether or not screen-sharing is initialized.
      */
+    _currentSharerId?: string;
     _desktopSharingEnabled: boolean;
-
-    /**
-     * Whether or not the local participant is screen-sharing.
-     */
+    _isLocalSharer?: boolean;
     _screensharing: boolean;
 }
 
@@ -83,14 +83,30 @@ class ShareDesktopButton extends AbstractButton<IProps> {
      * @returns {void}
      */
     override _handleClick() {
-        const { dispatch, _screensharing } = this.props;
+        const { dispatch, _currentSharerId, _isLocalSharer } = this.props;
+        const someoneSharing = Boolean(_currentSharerId);
+        const currentSharerId = _currentSharerId;
+        const isLocalSharer = _isLocalSharer;
+
+        const currentlyToggled = someoneSharing; // 改为“只要有人共享即 toggled”
 
         sendAnalytics(createToolbarEvent(
             'toggle.screen.sharing',
-            { enable: !_screensharing }));
+            { enable: !currentlyToggled }));
 
         dispatch(closeOverflowMenuIfOpen());
-        dispatch(startScreenShareFlow(!_screensharing));
+
+        // 想要开始共享，但已有其他人共享 -> 弹出确认对话框
+        if (someoneSharing && !isLocalSharer) {
+            dispatch(openDialog(InterruptShareConfirmDialog, {
+                sharerId: currentSharerId
+            }));
+
+            return;
+        }
+
+        // 正常切换
+        dispatch(startScreenShareFlow(!currentlyToggled));
     }
 }
 
@@ -105,10 +121,16 @@ const mapStateToProps = (state: IReduxState) => {
     // progress.
     const desktopSharingEnabled
         = JitsiMeetJS.isDesktopSharingEnabled() && !isDesktopShareButtonDisabled(state);
+    const screenshareIds = getScreenshareParticipantIds(state);
+    const anyScreensharing = screenshareIds.length > 0;
+    const currentSharerId = anyScreensharing ? screenshareIds[0] : undefined;
+    const local = getLocalParticipant(state);
 
     return {
         _desktopSharingEnabled: desktopSharingEnabled,
-        _screensharing: isScreenVideoShared(state),
+        _screensharing: anyScreensharing,
+        _currentSharerId: currentSharerId,
+        _isLocalSharer: Boolean(currentSharerId && local && currentSharerId === local.id),
         visible: JitsiMeetJS.isDesktopSharingEnabled()
     };
 };

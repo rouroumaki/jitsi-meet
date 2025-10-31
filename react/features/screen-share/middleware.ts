@@ -1,15 +1,15 @@
 import { IStore } from '../app/types';
-import { CONFERENCE_JOINED } from '../base/conference/actionTypes';
+import { CONFERENCE_JOINED, ENDPOINT_MESSAGE_RECEIVED } from '../base/conference/actionTypes';
 import { MEDIA_TYPE } from '../base/media/constants';
-import { pinParticipant } from '../base/participants/actions';
-import { isLocalParticipantModerator } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
-import { TRACK_ADDED } from '../base/tracks/actionTypes';
-import { togglePinStageParticipant } from '../filmstrip/actions.web';
-import { isFollowMeActive } from '../follow-me/functions';
+import { toggleScreensharing } from '../base/tracks/actions.web';
+import { showNotification } from '../notifications/actions';
+import { NOTIFICATION_TIMEOUT_TYPE } from '../notifications/constants';
 
 import { SET_SCREENSHARE_CAPTURE_FRAME_RATE, SET_SCREEN_AUDIO_SHARE_STATE } from './actionTypes';
-import logger from './logger';
+import { FORCE_STOP_SCREENSHARE } from './signals';
+
+declare const APP: any;
 
 /**
  * Implements the middleware of the feature screen-share.
@@ -39,10 +39,8 @@ MiddlewareRegistry.register(store => next => action => {
         const { participantId } = state['features/large-video'];
 
         if (isSharingAudio) {
-            logger.debug(`User with id: ${participantId} playing audio sharing.`);
             APP.API.notifyAudioOrVideoSharingToggled(MEDIA_TYPE.AUDIO, 'playing', participantId);
         } else {
-            logger.debug(`User with id: ${participantId} stop audio sharing.`);
             APP.API.notifyAudioOrVideoSharingToggled(MEDIA_TYPE.AUDIO, 'stop', participantId);
         }
         break;
@@ -59,13 +57,32 @@ MiddlewareRegistry.register(store => next => action => {
     //             const localScreenshareParticipantId = track.participantId;
 
     //             if (localScreenshareParticipantId) {
-    //                 logger.debug(`Moderator started screensharing, pinning to: ${localScreenshareParticipantId}`);
+    //                 logger.log(`Moderator started screensharing, pinning to: ${localScreenshareParticipantId}`);
     //                 store.dispatch(togglePinStageParticipant(localScreenshareParticipantId));
     //             }
     //         }
     //     }
     //     break;
     // }
+
+    case ENDPOINT_MESSAGE_RECEIVED: {
+        const { data } = action as any;
+
+        if (data?.name === FORCE_STOP_SCREENSHARE) {
+            // 收到打断指令：停止本地屏幕共享并提示
+            store.dispatch(toggleScreensharing(false));
+
+            const byName = data?.byName;
+
+            if (byName) {
+                store.dispatch(showNotification({
+                    titleKey: 'screenshare.interruptedBy',
+                    titleArguments: { name: byName }
+                }, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
+            }
+        }
+        break;
+    }
     }
 
     return result;
@@ -90,7 +107,7 @@ function _setScreenshareCaptureFps(store: IStore, frameRate?: number) {
     }
 
     if (screenShareFps) {
-        logger.debug(`Setting screenshare capture frame rate as ${screenShareFps}`);
+        // no-op
         conference.setDesktopSharingFrameRate(screenShareFps);
     }
 

@@ -213,6 +213,11 @@
         "video_ssrc": "Video SSRC:",
         "yes": "yes"
     },
+    "screenshare": {
+        "interruptConfirm": "{{name}} 正在共享屏幕，你将打断他的屏幕共享，是否继续？",
+        "interruptedBy": "你的屏幕共享已被 {{name}} 打断",
+        "youInterrupted": "你已打断 {{name}} 的屏幕共享"
+    },
     "dateUtils": {
         "earlier": "Earlier",
         "today": "Today",
