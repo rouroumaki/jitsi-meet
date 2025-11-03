@@ -1,28 +1,20 @@
 import { connect } from 'react-redux';
 
 import { IReduxState } from '../../../app/types';
-import { getCurrentConference } from '../../../base/conference/functions';
 import { translate } from '../../../base/i18n/functions';
 import { IconLivedoc } from '../../../base/icons/svg';
-import { pinParticipant } from '../../../base/participants/actions';
-import { getLocalParticipant, isLocalParticipantModerator } from '../../../base/participants/functions';
+import { isLocalParticipantModerator } from '../../../base/participants/functions';
 import { FakeParticipant } from '../../../base/participants/types';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
 import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { showWarningNotification } from '../../../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE } from '../../../notifications/constants';
 import { shouldDisplayTileView } from '../../../video-layout/functions.any';
-import { startSharedIframe } from '../../actions';
-import { SHARED_IFRAME_STATUSES } from '../../constants';
-import { sendSharedIframeCommand } from '../../functions';
-import { addStageParticipant } from '../../../filmstrip/actions.web';
+import { toggleSharedIframe } from '../../actions';
 
 interface IProps extends AbstractButtonProps {
-    _conference?: any;
     _isActive: boolean;
-    _localParticipant: any;
     _reduxState: IReduxState;
-    _url?: string;
 }
 
 class SharedIframeButton extends AbstractButton<IProps> {
@@ -35,7 +27,7 @@ class SharedIframeButton extends AbstractButton<IProps> {
     override toggledTooltip = 'Show LiveDoc';
 
     override async _handleClick() {
-        const { _isActive, _url, _conference, _localParticipant, dispatch } = this.props;
+        const { _isActive, dispatch } = this.props;
 
         // 只有主持人才能切换 LiveDoc
         if (!isLocalParticipantModerator(this.props._reduxState)) {
@@ -46,19 +38,9 @@ class SharedIframeButton extends AbstractButton<IProps> {
             return;
         }
 
-        if (_isActive) {
-        } else if (_url) {
-            // 显示 LiveDoc
-            dispatch(pinParticipant('livedoc'));
-
-            sendSharedIframeCommand({
-                conference: _conference,
-                localParticipantId: _localParticipant?.id,
-                status: SHARED_IFRAME_STATUSES.SHOW,
-            });
-        } else {
-            // 启动新的 LiveDoc 实例
-            dispatch(startSharedIframe('https://kloud.cn/GoogleMeet/MainStage/1234567890/0'));
+        // 如果已经激活，则不执行任何操作；否则切换 LiveDoc
+        if (!_isActive) {
+            dispatch(toggleSharedIframe());
         }
     }
 
@@ -73,9 +55,6 @@ function _mapStateToProps(state: IReduxState) {
 
     return {
         _isActive: onStage && !tileView,
-        _url: state['features/shared-iframe']?.url,
-        _localParticipant: getLocalParticipant(state),
-        _conference: getCurrentConference(state),
         _reduxState: state,
     };
 }

@@ -1,8 +1,12 @@
-import { IStore } from '../app/types';
+import { IReduxState, IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { openDialog } from '../base/dialog/actions';
-import { getLocalParticipant } from '../base/participants/functions';
+import { pinParticipant } from '../base/participants/actions';
+import { getLocalParticipant, getScreenshareParticipantIds } from '../base/participants/functions';
+import { toggleScreensharing } from '../base/tracks/actions.web';
 import { showLoadingNotification } from '../notifications/actions';
+import { isScreenVideoShared } from '../screen-share/functions';
+import { sendForceStopScreenShare } from '../screen-share/signals';
 
 import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE } from './actionTypes';
 import SharedIframeDialog from './components/web/SharedIframeDialog';
@@ -42,6 +46,32 @@ export function setSharedIframeActive(active: boolean) {
         type: SET_SHARED_IFRAME_ACTIVE,
         active
     } as const;
+}
+
+/**
+ * 关闭所有正在屏幕共享的参与者（包括本地参与者）.
+ *
+ * @param {Function} dispatch - The Redux dispatch function.
+ * @param {Object} state - The Redux state.
+ * @returns {void}
+ */
+function stopAllScreenSharing(dispatch: IStore['dispatch'], state: IReduxState): void {
+    const localParticipant = getLocalParticipant(state);
+    const screenshareParticipantIds = new Set([ ...getScreenshareParticipantIds(state) ]);
+    const localParticipantId = localParticipant?.id;
+
+    // 如果本地参与者正在屏幕共享，直接停止
+    if (isScreenVideoShared(state)) {
+        dispatch(toggleScreensharing(false));
+    }
+
+    // 关闭其他参与者的屏幕共享
+    for (const participantId of screenshareParticipantIds) {
+        // 跳过本地参与者，因为已经在上面的逻辑中处理了
+        if (participantId !== localParticipantId) {
+            dispatch(sendForceStopScreenShare(participantId));
+        }
+    }
 }
 
 export function startSharedIframe(url: string) {
@@ -127,4 +157,34 @@ export function stopSharedIframe() {
 
 export function showSharedIframeDialog(onSubmit: (url: string) => void) {
     return openDialog(SharedIframeDialog, { onSubmit });
+}
+
+export function toggleSharedIframe() {
+    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
+        const state = getState();
+        const conference = getCurrentConference(state);
+        const localParticipant = getLocalParticipant(state);
+        const url = state['features/shared-iframe']?.url;
+
+        if (!conference || !localParticipant) {
+            return;
+        }
+
+        // 关闭所有正在屏幕共享的参与者（包括本地参与者）
+        stopAllScreenSharing(dispatch, state);
+
+        // 如果有 URL，显示已存在的 LiveDoc
+        if (url) {
+            dispatch(pinParticipant('livedoc'));
+
+            sendSharedIframeCommand({
+                conference,
+                localParticipantId: localParticipant.id,
+                status: SHARED_IFRAME_STATUSES.SHOW,
+            });
+        } else {
+            // 启动新的 LiveDoc 实例
+            dispatch(startSharedIframe('https://kloud.cn/GoogleMeet/MainStage/1234567890/0'));
+        }
+    };
 }
