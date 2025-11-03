@@ -3,7 +3,6 @@ import { getCurrentConference } from '../base/conference/functions';
 import { openDialog } from '../base/dialog/actions';
 import { getLocalParticipant } from '../base/participants/functions';
 import { showLoadingNotification } from '../notifications/actions';
-// import { showLoadingNotification } from '../notifications/actions';
 
 import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE } from './actionTypes';
 import SharedIframeDialog from './components/web/SharedIframeDialog';
@@ -11,6 +10,7 @@ import { SHARED_IFRAME_STATUSES } from './constants';
 import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
 export function setSharedIframeState(payload: {
+    isScreenShared?: boolean;
     livedocInstanceId?: string;
     ownerId?: string;
     status?: string;
@@ -48,19 +48,22 @@ export function startSharedIframe(url: string) {
     return async (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
         const conference = getCurrentConference(getState());
         const localParticipant = getLocalParticipant(getState());
+        const state = getState();
 
         if (!conference || !url) {
             return;
         }
 
-        dispatch(showLoadingNotification({
+        const { isScreenShared } = state['features/shared-iframe'] || {};
+
+        !isScreenShared && dispatch(showLoadingNotification({
             title: 'Loading LiveDoc View, please wait ',
         }));
 
         // 轮询等待 livedocInstanceId 准备就绪
         const waitForLivedocInstanceId = async (maxAttempts = 30, interval = 1000): Promise<string | null> => {
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                const state = getState();
+
                 const { livedocInstanceId } = state['features/shared-iframe'] || {};
 
                 if (livedocInstanceId) {

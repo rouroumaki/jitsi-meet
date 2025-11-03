@@ -97,7 +97,7 @@ MiddlewareRegistry.register(store => next => action => {
                         const token = attributes.token;
                         const isShow = attributes.isShow !== undefined ? attributes.isShow === 'true' : true;
                         const state = getState();
-                        const { url: _currentUrl, active: _active } = state['features/shared-iframe'] || {};
+                        const { url: _currentUrl, active: _active, isScreenShared } = state['features/shared-iframe'] || {};
 
                         if (status === SHARED_IFRAME_STATUSES.STOP) {
                             // Remove the iframe participant when stopping
@@ -129,7 +129,7 @@ MiddlewareRegistry.register(store => next => action => {
 
                         try {
                             // 显示 loading notification
-                            dispatch(showLoadingNotification({
+                            !isScreenShared && dispatch(showLoadingNotification({
                                 title: 'Loading LiveDoc View, please wait ',
                             }));
 

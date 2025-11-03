@@ -4,15 +4,23 @@ import { connect } from 'react-redux';
 // @ts-ignore
 import Filmstrip from '../../../../../modules/UI/videolayout/Filmstrip';
 import { IReduxState } from '../../../app/types';
+import { VIDEO_TYPE } from '../../../base/media/constants';
+import { getLocalParticipant } from '../../../base/participants/functions';
 import { FakeParticipant } from '../../../base/participants/types';
+import { getVideoTrackByParticipant } from '../../../base/tracks/functions.any';
+import { isSpotTV } from '../../../base/util/spot';
 import { getVerticalViewMaxWidth } from '../../../filmstrip/functions.web';
 import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { hideLoadingNotification } from '../../../notifications/actions';
 import { showToolbox } from '../../../toolbox/actions.web';
-import { SHARED_IFRAME_STATUSES } from '../../constants';
-import { sendSharedIframeCommand } from '../../functions';
+import { setSharedIframeState } from '../../actions';
 
 interface IProps {
+    /**
+     * Whether the screen-sharing placeholder should be displayed or not.
+     */
+    _displayScreenSharingPlaceholder: boolean;
+
     /**
      * The available client width.
      */
@@ -126,6 +134,20 @@ class SharedIframe extends Component<IProps> {
     }
 
     /**
+     * Sync computed iframeUrl into redux state when it changes (e.g. placeholder mode).
+     *
+     * @param {IProps} prevProps - Previous props for comparison.
+     * @returns {void}
+     */
+    override componentDidUpdate() {
+        const { _displayScreenSharingPlaceholder, dispatch } = this.props;
+
+        if (_displayScreenSharingPlaceholder) {
+            dispatch(setSharedIframeState({ isScreenShared: true }));
+        }
+    }
+
+    /**
      * Implements React's {@link Component#componentWillUnmount()}.
      *
      * @inheritdoc
@@ -181,16 +203,16 @@ class SharedIframe extends Component<IProps> {
      * @returns {React$Element}
      */
     override render() {
-        const { isEnabled, isResizing, onStage, iframeUrl } = this.props;
+        const { isEnabled, isResizing, onStage, iframeUrl, _displayScreenSharingPlaceholder } = this.props;
 
         // 仅在没有 url 时不渲染；有 url 时始终挂载，避免重新加载 iframe
-        if (!isEnabled || !iframeUrl) {
+        if ((!isEnabled || !iframeUrl) && !_displayScreenSharingPlaceholder) {
             return null;
         }
 
         const style: any = this.getDimensions();
 
-        if (!onStage) {
+        if (!onStage && !_displayScreenSharingPlaceholder) {
             style.display = 'none';
         }
 
@@ -220,11 +242,27 @@ class SharedIframe extends Component<IProps> {
  * @returns {IProps}
  */
 function _mapStateToProps(state: IReduxState) {
-    const { url: iframeUrl } = state['features/shared-iframe'] || {};
+    let { url: iframeUrl } = state['features/shared-iframe'] || {};
     const { clientHeight, videoSpaceWidth } = state['features/base/responsive-ui'];
     const { visible, isResizing } = state['features/filmstrip'];
     const { isResizing: isChatResizing } = state['features/chat'];
     const onStage = getLargeVideoParticipant(state)?.fakeParticipant === FakeParticipant.SharedIframe;
+    const { seeWhatIsBeingShared } = state['features/large-video'];
+    const { id: localParticipantId } = getLocalParticipant(state) || {};
+    const largeVideoParticipant = getLargeVideoParticipant(state);
+    const videoTrack = getVideoTrackByParticipant(state, largeVideoParticipant);
+    const isLocalScreenshareOnLargeVideo = largeVideoParticipant?.id?.includes(localParticipantId ?? '')
+        && videoTrack?.videoType === VIDEO_TYPE.DESKTOP;
+
+    const _displayScreenSharingPlaceholder = Boolean(isLocalScreenshareOnLargeVideo && !seeWhatIsBeingShared && !isSpotTV(state));
+
+    if (_displayScreenSharingPlaceholder) {
+        // 从本地获取登录令牌
+        const localToken = localStorage.getItem('KloudUserToken');
+        const livedocInstanceId = state['features/shared-iframe']?.livedocInstanceId;
+
+        iframeUrl = `https://kloud.cn/GoogleMeet/MainStage/${livedocInstanceId}/0?token=${localToken}&usetoken=1&fromjitsi=1`;
+    }
 
     return {
         clientHeight,
@@ -235,6 +273,7 @@ function _mapStateToProps(state: IReduxState) {
         isResizing: isResizing || isChatResizing,
         onStage,
         iframeUrl,
+        _displayScreenSharingPlaceholder
     };
 }
 
