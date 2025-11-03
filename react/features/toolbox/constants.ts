@@ -30,11 +30,11 @@ export const THRESHOLDS = [
     },
     {
         width: 565,
-        order: [ 'microphone', 'camera', 'desktop', 'chat', 'raisehand', 'reactions', 'participants-pane', 'tileview', 'sharediframe' ]
+        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'reactions', 'participants-pane', 'tileview', 'desktop', 'sharediframe' ]
     },
     {
         width: 520,
-        order: [ 'microphone', 'camera', 'desktop', 'chat', 'raisehand', 'participants-pane', 'tileview', 'sharediframe' ]
+        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'participants-pane', 'tileview', 'desktop', 'sharediframe' ]
     },
     {
         width: 470,
@@ -91,12 +91,12 @@ export const NATIVE_THRESHOLDS = [
 export const MAIN_TOOLBAR_BUTTONS_PRIORITY = [
     'microphone',
     'camera',
-    'desktop',
     'chat',
     'raisehand',
     'reactions',
     'participants-pane',
     'tileview',
+    'desktop',
     'overflowmenu',
     'hangup',
     'invite',

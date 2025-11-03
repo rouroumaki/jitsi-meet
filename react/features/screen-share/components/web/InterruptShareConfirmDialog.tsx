@@ -42,7 +42,7 @@ class InterruptShareConfirmDialog extends Component<IProps> {
         return (
             <Dialog
                 cancel = {{ translationKey: 'dialog.Cancel' }}
-                ok = {{ translationKey: 'dialog.Continue' }}
+                ok = {{ translationKey: 'dialog.Ok' }}
                 onSubmit = { this._onConfirm }
                 titleKey = { title }>
                 <div className = 'interrupt-share-confirm-dialog'>
