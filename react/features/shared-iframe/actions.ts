@@ -4,7 +4,7 @@ import { openDialog } from '../base/dialog/actions';
 import { pinParticipant } from '../base/participants/actions';
 import { getLocalParticipant, getScreenshareParticipantIds } from '../base/participants/functions';
 import { toggleScreensharing } from '../base/tracks/actions.web';
-import { showLoadingNotification } from '../notifications/actions';
+import { hideLoadingNotification, showErrorNotification, showLoadingNotification } from '../notifications/actions';
 import { isScreenVideoShared } from '../screen-share/functions';
 import { sendForceStopScreenShare } from '../screen-share/signals';
 
@@ -91,7 +91,7 @@ export function startSharedIframe(url: string) {
         }));
 
         // 轮询等待 livedocInstanceId 准备就绪
-        const waitForLivedocInstanceId = async (maxAttempts = 30, interval = 1000): Promise<string | null> => {
+        const waitForLivedocInstanceId = async (maxAttempts = 20, interval = 1000): Promise<string | null> => {
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
 
                 const { livedocInstanceId } = state['features/shared-iframe'] || {};
@@ -110,7 +110,10 @@ export function startSharedIframe(url: string) {
         const livedocInstanceId = await waitForLivedocInstanceId();
 
         if (!livedocInstanceId) {
-            console.error('LiveDoc instance ID not available after waiting, please try again later');
+            dispatch(hideLoadingNotification());
+            dispatch(showErrorNotification({
+                title: 'LiveDoc instance ID not available after waiting, please try again later'
+            }));
 
             return;
         }

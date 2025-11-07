@@ -30,27 +30,27 @@ export const THRESHOLDS = [
     },
     {
         width: 565,
-        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'reactions', 'participants-pane', 'tileview', 'desktop', 'sharediframe' ]
+        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'reactions', 'participants-pane', 'desktop', 'tileview', 'sharediframe' ]
     },
     {
         width: 520,
-        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'participants-pane', 'tileview', 'desktop', 'sharediframe' ]
+        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'participants-pane', 'desktop', 'tileview', 'sharediframe' ]
     },
     {
         width: 470,
-        order: [ 'microphone', 'camera', 'desktop', 'chat', 'raisehand', 'participants-pane' ]
+        order: [ 'microphone', 'camera', 'sharediframe', 'desktop', 'chat', 'participants-pane' ]
     },
     {
         width: 420,
-        order: [ 'microphone', 'camera', 'desktop', 'chat', 'participants-pane' ]
+        order: [ 'microphone', 'camera', 'sharediframe', 'desktop', 'chat' ]
     },
     {
         width: 370,
-        order: [ 'microphone', 'camera', 'chat', 'participants-pane' ]
+        order: [ 'microphone', 'camera', 'sharediframe', 'desktop' ]
     },
     {
         width: 225,
-        order: [ 'microphone', 'camera', 'chat' ]
+        order: [ 'microphone', 'camera', 'sharediframe' ]
     },
     {
         width: 200,
@@ -112,7 +112,7 @@ export const MAIN_TOOLBAR_BUTTONS_PRIORITY = [
     'sharediframe',
     'shareaudio',
     'noisesuppression',
-    'whiteboard',
+    // 'whiteboard',
     'etherpad',
     'select-background',
     'stats',
@@ -179,7 +179,7 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     'tileview',
     'toggle-camera',
     'videoquality',
-    'whiteboard'
+    // 'whiteboard'
 ];
 
 /**

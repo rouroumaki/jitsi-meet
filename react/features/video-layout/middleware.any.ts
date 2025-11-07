@@ -2,14 +2,18 @@ import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { PARTICIPANT_LEFT, PIN_PARTICIPANT } from '../base/participants/actionTypes';
 import { pinParticipant } from '../base/participants/actions';
-import { getDominantSpeakerParticipant, getLocalParticipant, getParticipantById, getPinnedParticipant } from '../base/participants/functions';
+import { getDominantSpeakerParticipant, getLocalParticipant, getParticipantById, getPinnedParticipant, getScreenshareParticipantIds } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import StateListenerRegistry from '../base/redux/StateListenerRegistry';
+import { toggleScreensharing } from '../base/tracks/actions.web';
 import { SET_DOCUMENT_EDITING_STATUS } from '../etherpad/actionTypes';
 import { isStageFilmstripEnabled } from '../filmstrip/functions';
 import { isFollowMeActive } from '../follow-me/functions';
 import { selectParticipantInLargeVideo } from '../large-video/actions.any';
 import { getLargeVideoParticipant } from '../large-video/functions';
+import { isScreenVideoShared } from '../screen-share/functions';
+import { sendForceStopScreenShare } from '../screen-share/signals';
+import { setSharedIframeActive } from '../shared-iframe/actions';
 import { isSharedIframePlaying } from '../shared-iframe/functions';
 
 import { SET_TILE_VIEW } from './actionTypes';
@@ -72,6 +76,27 @@ MiddlewareRegistry.register(store => next => action => {
 
         if (action.enabled && !stageFilmstrip && getPinnedParticipant(state)) {
             store.dispatch(pinParticipant(null));
+        }
+
+        // Tile View 开启时关闭所有人的屏幕共享（包括本地）
+        if (action.enabled) {
+            store.dispatch(setSharedIframeActive(false));
+            const local = getLocalParticipant(state);
+            const localId = local?.id;
+
+            // 关闭本地屏幕共享
+            if (isScreenVideoShared(state)) {
+                store.dispatch(toggleScreensharing(false));
+            }
+
+            // 关闭远端屏幕共享
+            const sharerIds = new Set([ ...getScreenshareParticipantIds(state) ]);
+
+            sharerIds.forEach(id => {
+                if (id !== localId) {
+                    store.dispatch(sendForceStopScreenShare(id));
+                }
+            });
         }
         // else if (action.enabled === false) {
         //     // @ts-ignore
