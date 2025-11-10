@@ -15,6 +15,7 @@ import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functio
 
 export function setSharedIframeState(payload: {
     isScreenShared?: boolean;
+    isWhiteboard?: boolean;
     livedocInstanceId?: string;
     ownerId?: string;
     status?: string;

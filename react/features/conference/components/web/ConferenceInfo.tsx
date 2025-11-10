@@ -35,6 +35,11 @@ interface IProps {
     };
 
     /**
+     * Indicates whether the whiteboard is active.
+     */
+    _isWhiteboard?: boolean;
+
+    /**
      * Indicates whether the component should be visible or not.
      */
     _visible: boolean;
@@ -194,10 +199,15 @@ class ConferenceInfo extends Component<IProps> {
      * @returns {ReactElement}
      */
     override render() {
+        const containerStyle = {
+            justifyContent: this.props._isWhiteboard ? 'flex-end' : 'center'
+        };
+
         return (
             <div
                 className = 'details-container'
-                onFocus = { this._onTabIn }>
+                onFocus = { this._onTabIn }
+                style = { containerStyle }>
                 { this._renderAlwaysVisible() }
                 { this._renderAutoHide() }
             </div>
@@ -219,7 +229,8 @@ class ConferenceInfo extends Component<IProps> {
 function _mapStateToProps(state: IReduxState) {
     return {
         _visible: isToolboxVisible(state),
-        _conferenceInfo: getConferenceInfo(state)
+        _conferenceInfo: getConferenceInfo(state),
+        _isWhiteboard: state['features/shared-iframe']?.isWhiteboard
     };
 }
 

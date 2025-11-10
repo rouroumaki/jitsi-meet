@@ -103,6 +103,13 @@ class SharedIframe extends Component<IProps> {
             case 'onkloudloaded':
                 this.props.dispatch(hideLoadingNotification());
                 break;
+            case 'onkloudswitchfile':
+                if (data.data.IsWhiteboard) {
+                    this.props.dispatch(setSharedIframeState({ isWhiteboard: true }));
+                } else {
+                    this.props.dispatch(setSharedIframeState({ isWhiteboard: false }));
+                }
+                break;
                 // case 'onkloudjoinmeeting':
                 //     const { iframeUrl } = this.props;
 
