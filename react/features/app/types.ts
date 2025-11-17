@@ -73,6 +73,7 @@ import { IShareRoomState } from '../share-room/reducer';
 import { ISharedIframeState } from '../shared-iframe/reducer';
 import { ISharedVideoState } from '../shared-video/reducer';
 import { ISpeakerStatsState } from '../speaker-stats/reducer';
+import { ISTTState } from '../stt/reducer';
 import { ISubtitlesState } from '../subtitles/reducer';
 import { ITalkWhileMutedState } from '../talk-while-muted/reducer';
 import { IToolboxState } from '../toolbox/reducer';
@@ -165,6 +166,7 @@ export interface IReduxState {
     'features/shared-iframe': ISharedIframeState;
     'features/shared-video': ISharedVideoState;
     'features/speaker-stats': ISpeakerStatsState;
+    'features/stt': ISTTState;
     'features/subtitles': ISubtitlesState;
     'features/talk-while-muted': ITalkWhileMutedState;
     'features/testing': ITestingState;

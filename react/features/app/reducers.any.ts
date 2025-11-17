@@ -48,6 +48,7 @@ import '../settings/reducer';
 import '../speaker-stats/reducer';
 import '../shared-video/reducer';
 import '../shared-iframe/reducer';
+import '../stt/reducer';
 import '../subtitles/reducer';
 import '../screen-share/reducer';
 import '../toolbox/reducer';

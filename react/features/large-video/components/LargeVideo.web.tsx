@@ -17,6 +17,7 @@ import { FILMSTRIP_BREAKPOINT } from '../../filmstrip/constants';
 import { getVerticalViewMaxWidth, isFilmstripResizable } from '../../filmstrip/functions.web';
 import SharedIframe from '../../shared-iframe/components/web/SharedIframe';
 import SharedVideo from '../../shared-video/components/web/SharedVideo';
+import LocalSubtitleDisplay from '../../stt/components/LocalSubtitleDisplay';
 import Captions from '../../subtitles/components/web/Captions';
 import { areClosedCaptionsEnabled } from '../../subtitles/functions.any';
 import { setTileView } from '../../video-layout/actions.web';
@@ -259,6 +260,7 @@ class LargeVideo extends Component<IProps> {
                 </div>
                 { (!interfaceConfig.DISABLE_TRANSCRIPTION_SUBTITLES && _showSubtitles)
                     && <Captions /> }
+                <LocalSubtitleDisplay />
                 {
                     _isDisplayNameVisible
                     && (

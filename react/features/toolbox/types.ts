@@ -42,6 +42,8 @@ export type ToolbarButton = 'camera' |
     'raisehand' |
     'reactions' |
     'recording' |
+    'stt-enable' |
+    'stt-display-toggle' |
     'security' |
     'select-background' |
     'settings' |

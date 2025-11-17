@@ -45,11 +45,12 @@ import ShareAudioButton from '../screen-share/components/web/ShareAudioButton';
 import { isScreenAudioSupported, isScreenVideoShared } from '../screen-share/functions';
 import { useSecurityDialogButton } from '../security/hooks.web';
 import SettingsButton from '../settings/components/web/SettingsButton';
-import { useSharedVideoButton } from '../shared-video/hooks';
 import { useSharedIframeButton } from '../shared-iframe/hooks.web';
+import { useSharedVideoButton } from '../shared-video/hooks';
 import SpeakerStats from '../speaker-stats/components/web/SpeakerStats';
 import { isSpeakerStatsDisabled } from '../speaker-stats/functions';
 import { useSpeakerStatsButton } from '../speaker-stats/hooks.web';
+import { useSTTDisplayToggleButton, useSTTEnableButton } from '../stt/hooks.web';
 import { useClosedCaptionButton } from '../subtitles/hooks.web';
 import { toggleTileView } from '../video-layout/actions.any';
 import { shouldDisplayTileView } from '../video-layout/functions.web';
@@ -280,6 +281,8 @@ export function useToolboxButtons(
     const tileview = useTileViewButton();
     const cc = useClosedCaptionButton();
     const recording = useRecordingButton();
+    const sttEnableButton = useSTTEnableButton();
+    const sttDisplayToggleButton = useSTTDisplayToggleButton();
     const liveStreaming = useLiveStreamingButton();
     const linktosalesforce = useLinkToSalesforceButton();
     const shareaudio = getShareAudioButton();
@@ -312,6 +315,8 @@ export function useToolboxButtons(
         security,
         closedcaptions: cc,
         recording,
+        'stt-enable': sttEnableButton,
+        'stt-display-toggle': sttDisplayToggleButton,
         livestreaming: liveStreaming,
         linktosalesforce,
         sharedvideo: shareVideo,
