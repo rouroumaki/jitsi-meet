@@ -1,17 +1,10 @@
 import STTButton from './components/STTButton';
-import STTDisplayToggleButton from './components/STTDisplayToggleButton';
 import STTSettingsButton from './components/STTSettingsButton';
 
 
 const sttEnable = {
     key: 'stt-enable',
     Content: STTButton,
-    group: 2
-};
-
-const sttDisplayToggle = {
-    key: 'stt-display-toggle',
-    Content: STTDisplayToggleButton,
     group: 2
 };
 
@@ -28,15 +21,6 @@ const sttSettings = {
  */
 export function useSTTEnableButton() {
     return sttEnable;
-}
-
-/**
- * A hook that returns the STT display toggle button.
- *
- *  @returns {Object}
- */
-export function useSTTDisplayToggleButton() {
-    return sttDisplayToggle;
 }
 
 /**

@@ -3,16 +3,21 @@ import { WithTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
+import { IReduxState } from '../../app/types';
 import { translate } from '../../base/i18n/functions';
 import { withPixelLineHeight } from '../../base/styles/functions.web';
 import { MultiSelectItem } from '../../base/ui/components/types';
 import Dialog from '../../base/ui/components/web/Dialog';
 import MultiSelect from '../../base/ui/components/web/MultiSelect';
 import Select from '../../base/ui/components/web/Select';
+import Switch from '../../base/ui/components/web/Switch';
+import { setSubtitleVisible as setSubtitleVisibleAction } from '../actions';
+import { isSubtitleVisible } from '../functions';
 
 const STORAGE_KEY = 'stt-language-settings';
 
 interface IProps extends WithTranslation {
+    _isSubtitleVisible?: boolean;
     dispatch?: Function;
 }
 
@@ -30,6 +35,16 @@ const useStyles = makeStyles()(theme => {
         },
         bottomMargin: {
             marginBottom: theme.spacing(2)
+        },
+        controlRow: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: theme.spacing(4)
+        },
+        switchLabel: {
+            color: theme.palette.text01,
+            ...withPixelLineHeight(theme.typography.bodyShortRegular)
         }
     };
 });
@@ -52,7 +67,8 @@ function loadSettings() {
 
     return {
         speakLanguages: [],
-        readLanguage: 'zh'
+        readLanguage: 'zh',
+        subtitleVisible: true
     };
 }
 
@@ -62,7 +78,7 @@ function loadSettings() {
  * @param {Object} settings - The settings to save.
  * @returns {void}
  */
-function saveSettings(settings: { readLanguage: string; speakLanguages: string[]; }) {
+function saveSettings(settings: { readLanguage: string; speakLanguages: string[]; subtitleVisible: boolean; }) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
@@ -76,12 +92,13 @@ function saveSettings(settings: { readLanguage: string; speakLanguages: string[]
  * @param {IProps} props - The props of the component.
  * @returns {ReactElement}
  */
-function STTSettingsDialog({ t }: IProps) {
+function STTSettingsDialog({ t, dispatch, _isSubtitleVisible }: IProps) {
     const { classes } = useStyles();
     const [ filterValue, setFilterValue ] = useState('');
     const [ isMultiSelectOpen, setIsMultiSelectOpen ] = useState(false);
     const [ readLanguage, setReadLanguage ] = useState('zh');
     const [ selectedSpeakLanguages, setSelectedSpeakLanguages ] = useState<MultiSelectItem[]>([]);
+    const [ subtitleVisible, setSubtitleVisible ] = useState(_isSubtitleVisible ?? true);
 
     /**
      * Gets available language options.
@@ -113,7 +130,11 @@ function STTSettingsDialog({ t }: IProps) {
 
         setReadLanguage(savedSettings.readLanguage || 'zh');
         setSelectedSpeakLanguages(savedSpeakLanguages);
-    }, [ getAvailableLanguages ]);
+        // Load subtitleVisible from localStorage, fallback to Redux state or true
+        setSubtitleVisible(savedSettings.subtitleVisible !== undefined
+            ? savedSettings.subtitleVisible
+            : (_isSubtitleVisible ?? true));
+    }, [ getAvailableLanguages, _isSubtitleVisible ]);
 
     /**
      * Handles filter value change for multi-select.
@@ -185,18 +206,36 @@ function STTSettingsDialog({ t }: IProps) {
     }, []);
 
     /**
+     * Handles subtitle visibility toggle.
+     * Only updates local state, Redux will be updated on save.
+     *
+     * @param {boolean|undefined} visible - Whether subtitles should be visible.
+     * @returns {void}
+     */
+    const onSubtitleVisibilityToggle = useCallback((visible?: boolean) => {
+        const newValue = visible ?? false;
+
+        setSubtitleVisible(newValue);
+    }, []);
+
+    /**
      * Handles form submission.
+     * Saves all settings to localStorage and updates Redux state.
      *
      * @returns {void}
      */
     const onSubmit = useCallback(() => {
         const settings = {
             speakLanguages: selectedSpeakLanguages.map(item => item.value),
-            readLanguage
+            readLanguage,
+            subtitleVisible
         };
 
         saveSettings(settings);
-    }, [ selectedSpeakLanguages, readLanguage ]);
+        if (dispatch) {
+            dispatch(setSubtitleVisibleAction(subtitleVisible));
+        }
+    }, [ selectedSpeakLanguages, readLanguage, subtitleVisible, dispatch ]);
 
     const availableLanguages = getAvailableLanguages();
 
@@ -216,6 +255,17 @@ function STTSettingsDialog({ t }: IProps) {
             }}
             onSubmit = { onSubmit }
             titleKey = 'toolbar.sttSettings.title'>
+            <div className = { classes.controlRow }>
+                <label
+                    className = { classes.switchLabel }
+                    htmlFor = 'stt-subtitle-visibility-switch'>
+                    {t('toolbar.accessibilityLabel.sttShowSubtitles')}
+                </label>
+                <Switch
+                    checked = { subtitleVisible }
+                    id = 'stt-subtitle-visibility-switch'
+                    onChange = { onSubtitleVisibilityToggle } />
+            </div>
             <div className = { classes.selectContainer }>
                 <label
                     className = { classes.label }
@@ -251,5 +301,18 @@ function STTSettingsDialog({ t }: IProps) {
     );
 }
 
-export default translate(connect()(STTSettingsDialog));
+/**
+ * Maps part of the Redux state to the props of this component.
+ *
+ * @param {Object} state - The Redux state.
+ * @private
+ * @returns {IProps}
+ */
+function _mapStateToProps(state: IReduxState) {
+    return {
+        _isSubtitleVisible: isSubtitleVisible(state)
+    };
+}
+
+export default translate(connect(_mapStateToProps)(STTSettingsDialog));
 

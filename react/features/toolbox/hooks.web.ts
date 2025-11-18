@@ -50,7 +50,7 @@ import { useSharedVideoButton } from '../shared-video/hooks';
 import SpeakerStats from '../speaker-stats/components/web/SpeakerStats';
 import { isSpeakerStatsDisabled } from '../speaker-stats/functions';
 import { useSpeakerStatsButton } from '../speaker-stats/hooks.web';
-import { useSTTDisplayToggleButton, useSTTEnableButton, useSTTSettingsButton } from '../stt/hooks.web';
+import { useSTTEnableButton, useSTTSettingsButton } from '../stt/hooks.web';
 import { useClosedCaptionButton } from '../subtitles/hooks.web';
 import { toggleTileView } from '../video-layout/actions.any';
 import { shouldDisplayTileView } from '../video-layout/functions.web';
@@ -282,7 +282,6 @@ export function useToolboxButtons(
     const cc = useClosedCaptionButton();
     const recording = useRecordingButton();
     const sttEnableButton = useSTTEnableButton();
-    const sttDisplayToggleButton = useSTTDisplayToggleButton();
     const sttSettingsButton = useSTTSettingsButton();
     const liveStreaming = useLiveStreamingButton();
     const linktosalesforce = useLinkToSalesforceButton();
@@ -317,7 +316,6 @@ export function useToolboxButtons(
         closedcaptions: cc,
         recording,
         'stt-enable': sttEnableButton,
-        'stt-display-toggle': sttDisplayToggleButton,
         'stt-settings': sttSettingsButton,
         livestreaming: liveStreaming,
         linktosalesforce,

@@ -22,7 +22,9 @@ class STTButton extends AbstractButton<IProps> {
     override icon = IconSubtitles;
     override label = 'toolbar.accessibilityLabel.sttEnable';
     override tooltip = 'toolbar.accessibilityLabel.sttEnable';
+    override toggledAccessibilityLabel = 'toolbar.accessibilityLabel.sttDisable';
     override toggledLabel = 'toolbar.accessibilityLabel.sttDisable';
+    override toggledTooltip = 'toolbar.accessibilityLabel.sttDisable';
 
     /**
      * Handles clicking / pressing the button.

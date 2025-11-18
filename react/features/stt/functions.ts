@@ -14,14 +14,44 @@ export function isSTTEnabled(state: IReduxState): boolean {
     return state['features/stt'].enabled;
 }
 
+const STORAGE_KEY = 'stt-language-settings';
+
+/**
+ * Loads settings from localStorage.
+ *
+ * @returns {Object}
+ */
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (error) {
+        // Ignore parse errors
+    }
+
+    return null;
+}
+
 /**
  * Is subtitle display currently visible.
+ * Reads from localStorage first, falls back to Redux state.
  *
  * @param {IReduxState} state - The state of the application.
  * @returns {boolean}
  */
 export function isSubtitleVisible(state: IReduxState): boolean {
-    return state['features/stt'].subtitleVisible;
+    const savedSettings = loadSettings();
+
+    // If localStorage has the setting, use it
+    if (savedSettings && savedSettings.subtitleVisible !== undefined) {
+        return savedSettings.subtitleVisible;
+    }
+
+    // Otherwise, fall back to Redux state
+    return state['features/stt'].subtitleVisible || true;
 }
 
 /**

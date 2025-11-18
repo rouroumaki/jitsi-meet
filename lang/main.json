@@ -1338,12 +1338,12 @@
             "recording": "Toggle recording",
             "remoteMute": "Mute participant",
             "stt": "Toggle subtitles",
-            "sttEnable": "Enable transcription",
-            "sttDisable": "Disable transcription",
+            "sttEnable": "Enable Closed Caption",
+            "sttDisable": "Disable Closed Caption",
             "sttDisplayToggle": "Toggle subtitle display",
-            "sttSettings": "STT settings",
-            "sttShowSubtitles": "Show subtitles",
-            "sttHideSubtitles": "Hide subtitles",
+            "sttSettings": "Closed Caption Settings",
+            "sttShowSubtitles": "Show Closed Caption",
+            "sttHideSubtitles": "Hide Closed Caption",
             "remoteVideoMute": "Disable camera of participant",
             "security": "Security options",
             "selectBackground": "Select Background",
@@ -1434,7 +1434,7 @@
             "english": "English"
         },
         "sttSettings": {
-            "title": "STT Language Settings",
+            "title": "Closed Caption Settings",
             "selectSpeakLanguages": "Select language I can speak",
             "selectReadLanguage": "Select language I can read",
             "noLanguagesFound": "No languages found"
