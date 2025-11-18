@@ -170,6 +170,7 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     'security',
     'stt-enable',
     'stt-display-toggle',
+    'stt-settings',
     'select-background',
     'settings',
     'shareaudio',

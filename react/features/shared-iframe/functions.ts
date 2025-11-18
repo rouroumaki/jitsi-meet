@@ -4,6 +4,7 @@ import { FakeParticipant } from '../base/participants/types';
 import { toState } from '../base/redux/functions';
 import { getLargeVideoParticipant } from '../large-video/functions';
 
+import { MEETING_SERVER_API_BASE_URL } from './apiConstants';
 import { SHARED_IFRAME } from './constants';
 
 // 生成UUID的函数
@@ -92,7 +93,7 @@ export async function createLivedocInstance({
     userToken: string;
 }) {
     try {
-        const response = await fetch('https://wss.peertime.cn/MeetingServer/jitsi/create_meeting_instance', {
+        const response = await fetch(`${MEETING_SERVER_API_BASE_URL}/jitsi/create_meeting_instance`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

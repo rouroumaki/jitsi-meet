@@ -122,15 +122,17 @@ MiddlewareRegistry.register(store => next => action => {
 
         if (action.type === TRACK_REMOVED) {
             console.log('TRACK_REMOVED', action);
+
+            if (action.track.jitsiTrack.type === MEDIA_TYPE.AUDIO) {
+                break;
+            }
+
         }
 
         // 处理 TRACK_ADDED 中的屏幕共享 track
         if (action.type === TRACK_ADDED) {
             console.log('TRACK_ADDED', action);
-            if (action.track?.mediaType === MEDIA_TYPE.SCREENSHARE) {
-                break;
-            }
-            if (action.track?.mediaType === MEDIA_TYPE.AUDIO) {
+            if ([ MEDIA_TYPE.SCREENSHARE, MEDIA_TYPE.AUDIO, MEDIA_TYPE.VIDEO ].includes(action.track?.mediaType)) {
                 break;
             }
         }

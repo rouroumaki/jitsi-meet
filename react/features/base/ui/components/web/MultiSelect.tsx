@@ -18,7 +18,9 @@ interface IProps {
     isOpen?: boolean;
     items: MultiSelectItem[];
     noMatchesText?: string;
+    onBlur?: () => void;
     onFilterChange?: (value: string) => void;
+    onFocus?: () => void;
     onRemoved: (item: any) => void;
     onSelected: (item: any) => void;
     placeholder?: string;
@@ -108,6 +110,8 @@ const MultiSelect = ({
     onFilterChange,
     isOpen,
     noMatchesText,
+    onBlur,
+    onFocus,
     onSelected,
     selectedItems,
     onRemoved
@@ -148,7 +152,9 @@ const MultiSelect = ({
                 autoFocus = { autoFocus }
                 disabled = { disabled }
                 id = { id }
+                onBlur = { onBlur }
                 onChange = { onFilterChange }
+                onFocus = { onFocus }
                 placeholder = { placeholder }
                 ref = { inputRef }
                 value = { filterValue ?? '' } />

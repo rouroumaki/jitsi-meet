@@ -44,6 +44,7 @@ export type ToolbarButton = 'camera' |
     'recording' |
     'stt-enable' |
     'stt-display-toggle' |
+    'stt-settings' |
     'security' |
     'select-background' |
     'settings' |

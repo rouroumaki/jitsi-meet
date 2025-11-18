@@ -159,11 +159,11 @@ class LocalSubtitleDisplay extends React.Component<IProps> {
         }
 
         const classesObj = withStyles.getClasses(this.props);
-        const { participantName, text, isInterim } = _currentSubtitle;
+        const { participantName, text } = _currentSubtitle;
 
         return (
             <div className = { classesObj.localSubtitleContainer }>
-                <div className = { `${classesObj.subtitleContent} ${isInterim ? classesObj.interim : ''}` }>
+                <div className = { `${classesObj.subtitleContent} interim` }>
                     <div className = { classesObj.participantName }>
                         { participantName }:
                     </div>

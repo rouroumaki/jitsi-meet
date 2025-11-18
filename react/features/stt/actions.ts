@@ -169,11 +169,11 @@ export function setSTTEnabled(enabled: boolean, sttSDK?: ISTTSDK): any {
                 // Notify all participants that STT is enabled
                 if (conference) {
                     try {
-                        conference.sendEndpointMessage('', {
+                        conference.sendMessage({
                             type: 'stt-status-changed',
                             enabled: true,
                             timestamp: Date.now()
-                        });
+                        }, '');
                         logger.debug('STT enabled status sent to all participants');
                     } catch (error) {
                         logger.error('Failed to send STT status to participants', error);
@@ -188,11 +188,11 @@ export function setSTTEnabled(enabled: boolean, sttSDK?: ISTTSDK): any {
                 // Notify all participants that STT is disabled
                 if (conference) {
                     try {
-                        conference.sendEndpointMessage('', {
+                        conference.sendMessage({
                             type: 'stt-status-changed',
                             enabled: false,
                             timestamp: Date.now()
-                        });
+                        }, '');
                         logger.debug('STT disabled status sent to all participants');
                     } catch (error) {
                         logger.error('Failed to send STT status to participants', error);
