@@ -41,11 +41,11 @@ export async function checkIfUserIsRoomOwner(roomName: string): Promise<boolean>
 
     try {
         // 先从localStorage获取KloudClassRoomID
-        let classRoomID: string | null = window.localStorage.getItem('KloudClassRoomID');
+        let classRoomID: string | null = window.localStorage.getItem('KloudClassRoomID') || window.sessionStorage.getItem('UserData.ClassRoomID');
 
         // 如果没有ClassRoomID，尝试从token获取
         if (!classRoomID) {
-            const token = window.localStorage.getItem('KloudUserToken');
+            const token = window.localStorage.getItem('KloudUserToken') || window.sessionStorage.getItem('UserToken');
 
             if (token) {
                 try {
