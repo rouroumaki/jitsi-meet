@@ -2,6 +2,7 @@ import { escape } from 'lodash-es';
 import { AnyAction } from 'redux';
 
 import { IStore } from '../../app/types';
+import { getUserLoginInfo } from '../../shared-iframe/apiFunctions';
 import { SET_LOCATION_URL } from '../connection/actionTypes';
 import { participantUpdated } from '../participants/actions';
 import { getLocalParticipant } from '../participants/functions';
@@ -28,6 +29,7 @@ MiddlewareRegistry.register(store => next => action => {
         break;
     case SET_LOCATION_URL:
         _updateLocalParticipantFromUrl(store);
+        _handleTokenAutoLogin(store);
         break;
     }
 
@@ -113,5 +115,65 @@ function _updateLocalParticipantFromUrl({ dispatch, getState }: IStore) {
             displayName,
             email
         }));
+    }
+}
+
+/**
+ * Handles automatic login with token from URL parameters.
+ * If token is present in URL, calls API to get user info and sets up kloud login.
+ *
+ * @param {Store} store - The redux store.
+ * @private
+ * @returns {void}
+ */
+async function _handleTokenAutoLogin({ dispatch, getState }: IStore) {
+    const locationURL = getState()['features/base/connection'].locationURL;
+
+    if (!locationURL) {
+        return;
+    }
+
+    // 直接从URL的searchParams中获取token，避免parseURLParams的JSON解析问题
+    const token = locationURL.searchParams?.get('token');
+
+    if (!token || typeof token !== 'string') {
+        return;
+    }
+
+    window.localStorage.setItem('KloudUserToken', token);
+
+    // 避免重复调用，如果已经有相同的token在localStorage中，跳过
+    const existingToken = typeof window !== 'undefined' ? window.localStorage.getItem('KloudUserToken') : null;
+
+    // if (existingToken === token) {
+    //     return;
+    // }
+
+    try {
+        const userInfo = await getUserLoginInfo(token);
+        const userName = userInfo.Name;
+        const classRoomID = userInfo.ClassRoomID;
+
+        if (classRoomID) {
+            window.localStorage.setItem('KloudClassRoomID', classRoomID);
+            dispatch(updateSettings({
+                classRoomID
+            }));
+        }
+
+        if (userName && typeof window !== 'undefined') {
+            window.localStorage.setItem('KloudUserName', userName);
+
+            // 设置displayName为kloud用户名
+            dispatch(updateSettings({
+                displayName: userName,
+            }));
+
+            // 触发kloud-login-updated事件
+            window.dispatchEvent(new CustomEvent('kloud-login-updated'));
+        }
+    } catch (error) {
+        // 静默处理错误，避免影响正常流程
+        console.warn('Failed to auto login with token:', error);
     }
 }

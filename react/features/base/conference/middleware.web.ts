@@ -27,6 +27,7 @@ import { TRIGGER_READY_TO_CLOSE_REASONS } from './constants';
 import logger from './logger';
 
 import './middleware.any';
+import { waitForOwner } from '../../authentication/actions.any';
 
 let screenLock: WakeLockSentinel | undefined;
 
@@ -187,7 +188,6 @@ MiddlewareRegistry.register(store => next => action => {
                     localTracks = getLocalTracks(getState()['features/base/tracks']);
 
                     const jitsiTracks = localTracks.map((t: any) => t.jitsiTrack);
-
 
                     return APP.conference.startConference(jitsiTracks);
                 })

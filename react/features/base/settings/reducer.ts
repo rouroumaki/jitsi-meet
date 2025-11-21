@@ -48,7 +48,8 @@ const DEFAULT_STATE: ISettingsState = {
     userSelectedNotifications: {
         'notify.chatMessages': true
     },
-    userSelectedMicDeviceLabel: undefined
+    userSelectedMicDeviceLabel: undefined,
+    classRoomID: undefined,
 };
 
 export interface ISettingsState {
@@ -56,6 +57,7 @@ export interface ISettingsState {
     audioSettingsVisible?: boolean;
     avatarURL?: string;
     cameraDeviceId?: string | boolean;
+    classRoomID?: string;
     disableCallIntegration?: boolean;
     disableCrashReporting?: boolean;
     disableP2P?: boolean;
