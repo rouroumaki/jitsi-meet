@@ -5,6 +5,7 @@ import { IStore } from '../app/types';
 import {
     OPEN_CHAT,
     SET_CHAT_IS_RESIZING,
+    SET_CHAT_POSITION,
     SET_CHAT_WIDTH,
     SET_USER_CHAT_WIDTH
 } from './actionTypes';
@@ -93,5 +94,21 @@ export function setChatIsResizing(resizing: boolean) {
     return {
         type: SET_CHAT_IS_RESIZING,
         resizing
+    };
+}
+
+/**
+ * Sets the position of the chat panel (for modal mode).
+ *
+ * @param {{ x: number; y: number } | null} position - The new position of the chat panel.
+ * @returns {{
+ *     type: SET_CHAT_POSITION,
+ *     position: { x: number; y: number } | null
+ * }}
+ */
+export function setChatPosition(position: { x: number; y: number } | null) {
+    return {
+        type: SET_CHAT_POSITION,
+        position
     };
 }

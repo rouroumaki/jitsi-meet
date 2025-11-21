@@ -38,6 +38,7 @@ import {
 } from '../../../react/features/large-video/actions';
 import { getParticipantsPaneOpen } from '../../../react/features/participants-pane/functions';
 import PresenceLabel from '../../../react/features/presence-status/components/PresenceLabel';
+import { isSharedIframePlaying } from '../../../react/features/shared-iframe/functions';
 import { shouldDisplayTileView } from '../../../react/features/video-layout/functions.any';
 /* eslint-enable no-unused-vars */
 import { createDeferred } from '../../util/helpers';
@@ -479,10 +480,15 @@ export default class LargeVideoManager {
             /**
              * If chat state is open, we re-compute the container width
              * by subtracting the chat width, which may be resized by the user.
+             * However, don't subtract chat width when chat is in modal mode (when livedoc is displayed).
              */
-            const chatWidth = state['features/chat'].width?.current ?? CHAT_SIZE;
+            const isSharedIframeActive = isSharedIframePlaying(state);
 
-            widthToUse -= chatWidth;
+            if (!isSharedIframeActive) {
+                const chatWidth = state['features/chat'].width?.current ?? CHAT_SIZE;
+
+                widthToUse -= chatWidth;
+            }
         }
 
         if (resizableFilmstrip && visible && filmstripWidth.current >= FILMSTRIP_BREAKPOINT) {

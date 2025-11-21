@@ -30,6 +30,11 @@ interface IProps {
      * Function to be called when pressing the close button.
      */
     onCancel: Function;
+
+    /**
+     * Optional mouse down handler for dragging.
+     */
+    onMouseDown?: (e: React.MouseEvent) => void;
 }
 
 /**
@@ -37,7 +42,7 @@ interface IProps {
  *
  * @returns {React$Element<any>}
  */
-function ChatHeader({ className, isCCTabEnabled, isPollsEnabled }: IProps) {
+function ChatHeader({ className, isCCTabEnabled, isPollsEnabled, onMouseDown }: IProps) {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const { focusedTab } = useSelector((state: IReduxState) => state['features/chat']);
@@ -68,7 +73,8 @@ function ChatHeader({ className, isCCTabEnabled, isPollsEnabled }: IProps) {
 
     return (
         <div
-            className = { className || 'chat-dialog-header' }>
+            className = { className || 'chat-dialog-header' }
+            onMouseDown = { onMouseDown }>
             <span
                 aria-level = { 1 }
                 role = 'heading'>

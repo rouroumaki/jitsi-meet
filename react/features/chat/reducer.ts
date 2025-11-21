@@ -11,6 +11,7 @@ import {
     OPEN_CHAT,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SET_CHAT_IS_RESIZING,
+    SET_CHAT_POSITION,
     SET_CHAT_WIDTH,
     SET_FOCUSED_TAB,
     SET_LOBBY_CHAT_ACTIVE_STATE,
@@ -32,6 +33,7 @@ const DEFAULT_STATE = {
     isLobbyChatActive: false,
     focusedTab: ChatTabs.CHAT,
     isResizing: false,
+    position: null,
     width: {
         current: CHAT_SIZE,
         userSet: null
@@ -51,6 +53,7 @@ export interface IChatState {
     } | ILocalParticipant;
     messages: IMessage[];
     nbUnreadMessages: number;
+    position: { x: number; y: number } | null;
     privateMessageRecipient?: IParticipant;
     width: {
         current: number;
@@ -257,6 +260,13 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         return {
             ...state,
             isResizing: action.resizing
+        };
+    }
+
+    case SET_CHAT_POSITION: {
+        return {
+            ...state,
+            position: action.position
         };
     }
     }

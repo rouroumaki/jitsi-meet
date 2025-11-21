@@ -12,8 +12,9 @@ import { arePollsDisabled } from '../../../conference/functions.any';
 import FileSharing from '../../../file-sharing/components/web/FileSharing';
 import { isFileSharingEnabled } from '../../../file-sharing/functions.any';
 import PollsPane from '../../../polls/components/web/PollsPane';
+import { isSharedIframePlaying } from '../../../shared-iframe/functions';
 import { isCCTabEnabled } from '../../../subtitles/functions.any';
-import { sendMessage, setChatIsResizing, setFocusedTab, setUserChatWidth, toggleChat } from '../../actions.web';
+import { sendMessage, setChatIsResizing, setChatPosition, setFocusedTab, setUserChatWidth, toggleChat } from '../../actions.web';
 import { CHAT_SIZE, ChatTabs, SMALL_WIDTH_THRESHOLD } from '../../constants';
 import { getChatMaxSize } from '../../functions';
 import { IChatProps as AbstractProps } from '../../types';
@@ -96,6 +97,11 @@ interface IProps extends AbstractProps {
     _onTogglePollsTab: Function;
 
     /**
+     * The current position of the chat panel (for modal mode).
+     */
+    _position: { x: number; y: number; } | null;
+
+    /**
      * Whether or not to block chat access with a nickname input form.
      */
     _showNamePrompt: boolean;
@@ -106,16 +112,58 @@ interface IProps extends AbstractProps {
     _width: number;
 }
 
-const useStyles = makeStyles<{ _isResizing: boolean; width: number; }>()((theme, { _isResizing, width }) => {
+const useStyles = makeStyles<{
+    _isModal: boolean;
+    _isResizing: boolean;
+    position: { x: number; y: number; } | null;
+    width: number;
+}>()((theme, { _isModal, _isResizing, position, width }) => {
+    const getPositionStyles = () => {
+        if (!_isModal) {
+            return {};
+        }
+
+        if (position) {
+            return {
+                left: `${position.x}px`,
+                top: `${position.y}px`,
+                transform: 'none'
+            };
+        }
+
+        // Center the modal if no position is set
+        return {
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)'
+        };
+    };
+
     return {
+        backdrop: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 299
+        },
         container: {
             backgroundColor: theme.palette.ui01,
             flexShrink: 0,
             overflow: 'hidden',
-            position: 'relative',
+            position: _isModal ? 'fixed' : 'relative',
             transition: _isResizing ? undefined : 'width .16s ease-in-out',
             width: `${width}px`,
             zIndex: 300,
+            ...(_isModal ? {
+                height: '80vh',
+                maxHeight: '600px',
+                borderRadius: '8px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                ...getPositionStyles()
+            } : {}),
 
             '&:hover, &:focus-within': {
                 '& .dragHandleContainer': {
@@ -129,7 +177,8 @@ const useStyles = makeStyles<{ _isResizing: boolean; width: number; }>()((theme,
                 left: 0,
                 right: 0,
                 top: 0,
-                width: 'auto'
+                width: 'auto',
+                transform: 'none'
             },
 
             '*': {
@@ -152,6 +201,9 @@ const useStyles = makeStyles<{ _isResizing: boolean; width: number; }>()((theme,
             ...theme.typography.heading6,
             lineHeight: 'unset',
             fontWeight: theme.typography.heading6.fontWeight as any,
+            cursor: _isModal ? 'move' : 'default',
+            userSelect: 'none',
+            '-webkit-user-select': 'none',
 
             '.jitsi-icon': {
                 cursor: 'pointer'
@@ -237,13 +289,17 @@ const Chat = ({
     _onTogglePollsTab,
     _showNamePrompt,
     _width,
+    _position,
     dispatch,
     t
 }: IProps) => {
-    const { classes, cx } = useStyles({ _isResizing, width: _width });
+    const { classes, cx } = useStyles({ _isResizing, width: _width, _isModal, position: _position });
     const [ isMouseDown, setIsMouseDown ] = useState(false);
     const [ mousePosition, setMousePosition ] = useState<number | null>(null);
     const [ dragChatWidth, setDragChatWidth ] = useState<number | null>(null);
+    const [ isDragging, setIsDragging ] = useState(false);
+    const [ dragStartPosition, setDragStartPosition ] = useState<{ x: number; y: number; } | null>(null);
+    const [ chatStartPosition, setChatStartPosition ] = useState<{ x: number; y: number; } | null>(null);
     const maxChatWidth = useSelector(getChatMaxSize);
 
     /**
@@ -320,16 +376,116 @@ const Chat = ({
         trailing: false
     }), [ isMouseDown, mousePosition, dragChatWidth, _width, maxChatWidth, dispatch ]);
 
+    /**
+     * Handles mouse down on the chat header for dragging (modal mode only).
+     *
+     * @param {MouseEvent} e - The mouse down event.
+     * @returns {void}
+     */
+    const onHeaderMouseDown = useCallback((e: React.MouseEvent) => {
+        if (!_isModal) {
+            return;
+        }
+
+        // Don't start dragging if clicking on the close button
+        if ((e.target as HTMLElement).closest('.jitsi-icon')) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        setIsDragging(true);
+        setDragStartPosition({ x: e.clientX, y: e.clientY });
+
+        // Get current chat position
+        const chatElement = document.getElementById('sideToolbarContainer');
+
+        if (chatElement) {
+            const rect = chatElement.getBoundingClientRect();
+            const currentX = _position?.x ?? rect.left;
+            const currentY = _position?.y ?? rect.top;
+
+            setChatStartPosition({ x: currentX, y: currentY });
+        } else {
+            // Fallback to center if element not found
+            const currentX = _position?.x ?? (window.innerWidth - _width) / 2;
+            const currentY = _position?.y ?? (window.innerHeight - 480) / 2;
+
+            setChatStartPosition({ x: currentX, y: currentY });
+        }
+
+        // Disable text selection during drag
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'move';
+    }, [ _isModal, _position, _width ]);
+
+    /**
+     * Handles mouse move for dragging the chat modal.
+     *
+     * @param {MouseEvent} e - The mousemove event.
+     * @returns {void}
+     */
+    const onChatDrag = useCallback((e: MouseEvent) => {
+        if (!isDragging || !dragStartPosition || !chatStartPosition) {
+            return;
+        }
+
+        const deltaX = e.clientX - dragStartPosition.x;
+        const deltaY = e.clientY - dragStartPosition.y;
+
+        let newX = chatStartPosition.x + deltaX;
+        let newY = chatStartPosition.y + deltaY;
+
+        // Constrain to viewport
+        const chatElement = document.getElementById('sideToolbarContainer');
+
+        if (chatElement) {
+            const rect = chatElement.getBoundingClientRect();
+            const maxX = window.innerWidth - rect.width;
+            const maxY = window.innerHeight - rect.height;
+
+            newX = Math.max(0, Math.min(newX, maxX));
+            newY = Math.max(0, Math.min(newY, maxY));
+        }
+
+        dispatch(setChatPosition({ x: newX, y: newY }));
+    }, [ isDragging, dragStartPosition, chatStartPosition, dispatch ]);
+
+    /**
+     * Handles mouse up for dragging the chat modal.
+     *
+     * @returns {void}
+     */
+    const onChatDragEnd = useCallback(() => {
+        if (isDragging) {
+            setIsDragging(false);
+            setDragStartPosition(null);
+            setChatStartPosition(null);
+
+            // Restore cursor and text selection
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    }, [ isDragging ]);
+
     // Set up event listeners when component mounts
     useEffect(() => {
         document.addEventListener('mouseup', onDragMouseUp);
         document.addEventListener('mousemove', onChatResize);
 
+        if (_isModal) {
+            document.addEventListener('mousemove', onChatDrag);
+            document.addEventListener('mouseup', onChatDragEnd);
+        }
+
         return () => {
             document.removeEventListener('mouseup', onDragMouseUp);
             document.removeEventListener('mousemove', onChatResize);
+            document.removeEventListener('mousemove', onChatDrag);
+            document.removeEventListener('mouseup', onChatDragEnd);
         };
-    }, [ onDragMouseUp, onChatResize ]);
+    }, [ onDragMouseUp, onChatResize, onChatDrag, onChatDragEnd, _isModal ]);
 
     /**
     * Sends a text message.
@@ -507,30 +663,33 @@ const Chat = ({
     }
 
     return (
-        _isOpen ? <div
-            className = { classes.container }
-            id = 'sideToolbarContainer'
-            onKeyDown = { onEscClick } >
-            <ChatHeader
-                className = { cx('chat-header', classes.chatHeader) }
-                isCCTabEnabled = { _isCCTabEnabled }
-                isPollsEnabled = { _isPollsEnabled }
-                onCancel = { onToggleChat } />
-            {_showNamePrompt
-                ? <DisplayNameForm
-                    isCCTabEnabled = { _isCCTabEnabled }
-                    isPollsEnabled = { _isPollsEnabled } />
-                : renderChat()}
+        _isOpen ? (
             <div
-                className = { cx(
-                    classes.dragHandleContainer,
-                    (isMouseDown || _isResizing) && 'visible',
-                    'dragHandleContainer'
-                ) }
-                onMouseDown = { onDragHandleMouseDown }>
-                <div className = { cx(classes.dragHandle, 'dragHandle') } />
+                className = { classes.container }
+                id = 'sideToolbarContainer'
+                onKeyDown = { onEscClick }>
+                <ChatHeader
+                    className = { cx('chat-header', classes.chatHeader) }
+                    isCCTabEnabled = { _isCCTabEnabled }
+                    isPollsEnabled = { _isPollsEnabled }
+                    onCancel = { onToggleChat }
+                    onMouseDown = { onHeaderMouseDown } />
+                {_showNamePrompt
+                    ? <DisplayNameForm
+                        isCCTabEnabled = { _isCCTabEnabled }
+                        isPollsEnabled = { _isPollsEnabled } />
+                    : renderChat()}
+                <div
+                    className = { cx(
+                        classes.dragHandleContainer,
+                        (isMouseDown || _isResizing) && 'visible',
+                        'dragHandleContainer'
+                    ) }
+                    onMouseDown = { onDragHandleMouseDown }>
+                    <div className = { cx(classes.dragHandle, 'dragHandle') } />
+                </div>
             </div>
-        </div> : null
+        ) : null
     );
 };
 
@@ -556,12 +715,13 @@ const Chat = ({
  * }}
  */
 function _mapStateToProps(state: IReduxState, _ownProps: any) {
-    const { isOpen, focusedTab, messages, nbUnreadMessages, width, isResizing } = state['features/chat'];
+    const { isOpen, focusedTab, messages, nbUnreadMessages, width, isResizing, position } = state['features/chat'];
     const { nbUnreadPolls } = state['features/polls'];
     const _localParticipant = getLocalParticipant(state);
+    const isSharedIframeActive = isSharedIframePlaying(state);
 
     return {
-        _isModal: window.innerWidth <= SMALL_WIDTH_THRESHOLD,
+        _isModal: window.innerWidth <= SMALL_WIDTH_THRESHOLD || isSharedIframeActive,
         _isOpen: isOpen,
         _isPollsEnabled: !arePollsDisabled(state),
         _isCCTabEnabled: isCCTabEnabled(state),
@@ -572,7 +732,8 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
         _nbUnreadPolls: nbUnreadPolls,
         _showNamePrompt: !_localParticipant?.name,
         _width: width?.current || CHAT_SIZE,
-        _isResizing: isResizing
+        _isResizing: isResizing,
+        _position: position
     };
 }
 

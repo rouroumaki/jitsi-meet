@@ -163,3 +163,12 @@ export const SET_USER_CHAT_WIDTH = 'SET_USER_CHAT_WIDTH';
  * }
  */
 export const SET_CHAT_IS_RESIZING = 'SET_CHAT_IS_RESIZING';
+
+/**
+ * The type of action which sets the position of the chat panel (for modal mode).
+ * {
+ *      type: SET_CHAT_POSITION,
+ *      position: { x: number; y: number } | null
+ * }
+ */
+export const SET_CHAT_POSITION = 'SET_CHAT_POSITION';
