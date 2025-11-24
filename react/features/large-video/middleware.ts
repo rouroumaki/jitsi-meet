@@ -17,6 +17,7 @@ import {
 } from '../base/tracks/actionTypes';
 import { TOGGLE_DOCUMENT_EDITING } from '../etherpad/actionTypes';
 import { TOGGLE_PIN_STAGE_PARTICIPANT } from '../filmstrip/actionTypes';
+import { setSharedIframeActive } from '../shared-iframe/actions';
 import { isSharedIframePlaying } from '../shared-iframe/functions';
 import { shouldDisplayTileView } from '../video-layout/functions.web';
 
@@ -64,6 +65,11 @@ MiddlewareRegistry.register(store => next => action => {
         const result = next(action);
 
         console.log('selectParticipantInLargeVideo', action);
+        if (action.participant.id === 'livedoc') {
+            store.dispatch(setSharedIframeActive(true));
+        } else {
+            store.dispatch(setSharedIframeActive(false));
+        }
 
         store.dispatch(selectParticipantInLargeVideo(action.participant?.id));
 
@@ -132,9 +138,16 @@ MiddlewareRegistry.register(store => next => action => {
         // 处理 TRACK_ADDED 中的屏幕共享 track
         if (action.type === TRACK_ADDED) {
             console.log('TRACK_ADDED', action);
-            if ([ MEDIA_TYPE.SCREENSHARE, MEDIA_TYPE.AUDIO, MEDIA_TYPE.VIDEO ].includes(action.track?.mediaType)) {
+            const { active } = state['features/shared-iframe'] || {};
+
+            console.log('selectParticipantInLargeVideo TRACK_ADDED', active);
+            if (active) {
                 break;
             }
+            // // 加这个是为livedoc能显示，因为后面还有直接pinParticipant的逻辑
+            // if ([ MEDIA_TYPE.SCREENSHARE, MEDIA_TYPE.AUDIO, MEDIA_TYPE.VIDEO ].includes(action.track?.mediaType)) {
+            //     break;
+            // }
         }
 
         store.dispatch(selectParticipantInLargeVideo());

@@ -112,8 +112,10 @@ MiddlewareRegistry.register(store => next => action => {
 
                         // 处理视图显示/隐藏状态
                         if (status === SHARED_IFRAME_STATUSES.SHOW) {
-                            console.log('status === SHARED_IFRAME_STATUSES.SHOW', _active);
-                            dispatch(pinParticipant('livedoc'));
+                            // 这里加延迟是为了pinParticipant livedoc能最后一个触发
+                            setTimeout(() => {
+                                dispatch(pinParticipant('livedoc'));
+                            }, 300);
                             dispatch(setSharedIframeActive(true));
                         }
 

@@ -94,8 +94,9 @@ export function startSharedIframe(url: string) {
         // 轮询等待 livedocInstanceId 准备就绪
         const waitForLivedocInstanceId = async (maxAttempts = 20, interval = 1000): Promise<string | null> => {
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
-
-                const { livedocInstanceId } = state['features/shared-iframe'] || {};
+                // 每次迭代都获取最新的状态，而不是使用旧的 state 快照
+                const currentState = getState();
+                const { livedocInstanceId } = currentState['features/shared-iframe'] || {};
 
                 if (livedocInstanceId) {
                     return livedocInstanceId;
