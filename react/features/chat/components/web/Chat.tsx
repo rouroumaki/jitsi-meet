@@ -12,10 +12,9 @@ import { arePollsDisabled } from '../../../conference/functions.any';
 import FileSharing from '../../../file-sharing/components/web/FileSharing';
 import { isFileSharingEnabled } from '../../../file-sharing/functions.any';
 import PollsPane from '../../../polls/components/web/PollsPane';
-import { isSharedIframePlaying } from '../../../shared-iframe/functions';
 import { isCCTabEnabled } from '../../../subtitles/functions.any';
 import { sendMessage, setChatIsResizing, setChatPosition, setFocusedTab, setUserChatWidth, toggleChat } from '../../actions.web';
-import { CHAT_SIZE, ChatTabs, SMALL_WIDTH_THRESHOLD } from '../../constants';
+import { CHAT_SIZE, ChatTabs } from '../../constants';
 import { getChatMaxSize } from '../../functions';
 import { IChatProps as AbstractProps } from '../../types';
 
@@ -718,10 +717,9 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
     const { isOpen, focusedTab, messages, nbUnreadMessages, width, isResizing, position } = state['features/chat'];
     const { nbUnreadPolls } = state['features/polls'];
     const _localParticipant = getLocalParticipant(state);
-    const isSharedIframeActive = isSharedIframePlaying(state);
 
     return {
-        _isModal: window.innerWidth <= SMALL_WIDTH_THRESHOLD || isSharedIframeActive,
+        _isModal: true,
         _isOpen: isOpen,
         _isPollsEnabled: !arePollsDisabled(state),
         _isCCTabEnabled: isCCTabEnabled(state),

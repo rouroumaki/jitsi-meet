@@ -1,9 +1,9 @@
 import { batch } from 'react-redux';
 
 import { IStore } from '../../app/types';
-import { CHAT_SIZE } from '../../chat/constants';
+// import { CHAT_SIZE } from '../../chat/constants';
 import { getParticipantsPaneWidth } from '../../participants-pane/functions';
-import { isSharedIframePlaying } from '../../shared-iframe/functions';
+// import { isSharedIframePlaying } from '../../shared-iframe/functions';
 
 import {
     CLIENT_RESIZED,
@@ -43,13 +43,13 @@ export function clientResized(clientWidth: number, clientHeight: number) {
 
         if (navigator.product !== 'ReactNative') {
             const state = getState();
-            const { isOpen: isChatOpen, width } = state['features/chat'];
-            const isSharedIframeActive = isSharedIframePlaying(state);
+            // const { isOpen: isChatOpen, width } = state['features/chat'];
+            // const isSharedIframeActive = isSharedIframePlaying(state);
 
-            // Don't subtract chat width when chat is in modal mode (when livedoc is displayed)
-            if (isChatOpen && !isSharedIframeActive) {
-                availableWidth -= width?.current ?? CHAT_SIZE;
-            }
+            // Chat is now always in modal mode, so don't subtract chat width from available width
+            // if (isChatOpen && !isSharedIframeActive) {
+            //     availableWidth -= width?.current ?? CHAT_SIZE;
+            // }
 
             availableWidth -= getParticipantsPaneWidth(state);
         }

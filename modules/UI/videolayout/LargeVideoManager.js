@@ -25,7 +25,8 @@ import {
 import { getHideSelfView } from '../../../react/features/base/settings/functions.any';
 import { trackStreamingStatusChanged } from '../../../react/features/base/tracks/actions.any';
 import { getVideoTrackByParticipant } from '../../../react/features/base/tracks/functions.any';
-import { CHAT_SIZE } from '../../../react/features/chat/constants';
+
+// import { CHAT_SIZE } from '../../../react/features/chat/constants';
 import {
     isTrackStreamingStatusActive,
     isTrackStreamingStatusInactive,
@@ -38,7 +39,8 @@ import {
 } from '../../../react/features/large-video/actions';
 import { getParticipantsPaneOpen } from '../../../react/features/participants-pane/functions';
 import PresenceLabel from '../../../react/features/presence-status/components/PresenceLabel';
-import { isSharedIframePlaying } from '../../../react/features/shared-iframe/functions';
+
+// import { isSharedIframePlaying } from '../../../react/features/shared-iframe/functions';
 import { shouldDisplayTileView } from '../../../react/features/video-layout/functions.any';
 /* eslint-enable no-unused-vars */
 import { createDeferred } from '../../util/helpers';
@@ -268,13 +270,13 @@ export default class LargeVideoManager {
             // use a custom hook to update a local track streaming status.
             if (this.videoTrack?.jitsiTrack?.getSourceName() !== videoTrack?.jitsiTrack?.getSourceName()
                 || this.videoTrack?.jitsiTrack?.isP2P !== videoTrack?.jitsiTrack?.isP2P) {
-            // In the case where we switch from jvb to p2p when we need to switch the p2p and jvb track, they will be
-            // with the same source name. In order to add the streaming status listener we need to check if the isP2P
-            // flag is different. Without this check we won't have the correct stream status listener for the track.
-            // Normally the Thumbnail and ConnectionIndicator components will update the streaming status the same way
-            // and this may mask the problem. But if for some reason the update from the Thumbnail and
-            // ConnectionIndicator components don't happen this may lead to showing the avatar instead of
-            // the video because of the old track inactive streaming status.
+                // In the case where we switch from jvb to p2p when we need to switch the p2p and jvb track, they will be
+                // with the same source name. In order to add the streaming status listener we need to check if the isP2P
+                // flag is different. Without this check we won't have the correct stream status listener for the track.
+                // Normally the Thumbnail and ConnectionIndicator components will update the streaming status the same way
+                // and this may mask the problem. But if for some reason the update from the Thumbnail and
+                // ConnectionIndicator components don't happen this may lead to showing the avatar instead of
+                // the video because of the old track inactive streaming status.
                 if (this.videoTrack && !this.videoTrack.local) {
                     this.videoTrack.jitsiTrack.off(JitsiTrackEvents.TRACK_STREAMING_STATUS_CHANGED,
                         this.handleTrackStreamingStatusChanged);
@@ -308,11 +310,9 @@ export default class LargeVideoManager {
 
             const showAvatar
                 = isVideoContainer
-                    && ((isAudioOnly && videoType !== VIDEO_TYPE.DESKTOP) || !isVideoRenderable || legacyScreenshare);
+                && ((isAudioOnly && videoType !== VIDEO_TYPE.DESKTOP) || !isVideoRenderable || legacyScreenshare);
 
-            logger.debug(`scheduleLargeVideoUpdate: Remote track ${videoTrack?.jitsiTrack}, isVideoMuted=${
-                isVideoMuted}, streamingStatusActive=${streamingStatusActive}, isVideoRenderable=${
-                isVideoRenderable}, showAvatar=${showAvatar}`);
+            logger.debug(`scheduleLargeVideoUpdate: Remote track ${videoTrack?.jitsiTrack}, isVideoMuted=${isVideoMuted}, streamingStatusActive=${streamingStatusActive}, isVideoRenderable=${isVideoRenderable}, showAvatar=${showAvatar}`);
 
             let promise;
 
@@ -326,9 +326,9 @@ export default class LargeVideoManager {
                 promise = container.hide();
 
                 if ((!shouldDisplayTileView(state) || participant?.pinned) // In theory the tile view may not be
-                // enabled yet when we auto pin the participant.
+                    // enabled yet when we auto pin the participant.
 
-                        && participant && !participant.local && !participant.fakeParticipant) {
+                    && participant && !participant.local && !participant.fakeParticipant) {
                     // remote participant only
 
                     const track = getVideoTrackByParticipant(state, participant);
@@ -366,8 +366,8 @@ export default class LargeVideoManager {
             const overrideAndHide = APP.conference.isAudioOnly();
 
             this.updateParticipantConnStatusIndication(
-                    id,
-                    !overrideAndHide && messageKey);
+                id,
+                !overrideAndHide && messageKey);
 
             // Change the participant id the presence label is listening to.
             this.updatePresenceLabel(id);
@@ -467,7 +467,8 @@ export default class LargeVideoManager {
 
         let widthToUse = this.preferredWidth || window.innerWidth;
         const state = APP.store.getState();
-        const { isOpen } = state['features/chat'];
+
+        // const { isOpen } = state['features/chat'];
         const { width: filmstripWidth, visible } = state['features/filmstrip'];
         const isParticipantsPaneOpen = getParticipantsPaneOpen(state);
         const resizableFilmstrip = isFilmstripResizable(state);
@@ -476,20 +477,18 @@ export default class LargeVideoManager {
             widthToUse -= theme.participantsPaneWidth;
         }
 
-        if (isOpen && window.innerWidth > 580) {
-            /**
-             * If chat state is open, we re-compute the container width
-             * by subtracting the chat width, which may be resized by the user.
-             * However, don't subtract chat width when chat is in modal mode (when livedoc is displayed).
-             */
-            const isSharedIframeActive = isSharedIframePlaying(state);
+        // Chat is now always in modal mode, so don't subtract chat width from available width
+        // if (isOpen && window.innerWidth > 580) {
+        //     /**
+        //      * If chat state is open, we re-compute the container width
+        //      * by subtracting the chat width, which may be resized by the user.
+        //      * However, don't subtract chat width when chat is in modal mode (when livedoc is displayed).
+        //      */
 
-            if (!isSharedIframeActive) {
-                const chatWidth = state['features/chat'].width?.current ?? CHAT_SIZE;
+        //     const chatWidth = state['features/chat'].width?.current ?? CHAT_SIZE;
 
-                widthToUse -= chatWidth;
-            }
-        }
+        //     widthToUse -= chatWidth;
+        // }
 
         if (resizableFilmstrip && visible && filmstripWidth.current >= FILMSTRIP_BREAKPOINT) {
             widthToUse -= getVerticalViewMaxWidth(state);
@@ -525,11 +524,11 @@ export default class LargeVideoManager {
      */
     updateAvatar() {
         ReactDOM.render(
-            <Provider store = { APP.store }>
+            <Provider store={APP.store}>
                 <Avatar
-                    id = "dominantSpeakerAvatar"
-                    participantId = { this.id }
-                    size = { 200 } />
+                    id="dominantSpeakerAvatar"
+                    participantId={this.id}
+                    size={200} />
             </Provider>,
             this._dominantSpeakerAvatarContainer
         );
@@ -566,11 +565,11 @@ export default class LargeVideoManager {
 
         if (presenceLabelContainer) {
             ReactDOM.render(
-                <Provider store = { APP.store }>
-                    <I18nextProvider i18n = { i18next }>
+                <Provider store={APP.store}>
+                    <I18nextProvider i18n={i18next}>
                         <PresenceLabel
-                            participantID = { id }
-                            className = 'presence-label' />
+                            participantID={id}
+                            className='presence-label' />
                     </I18nextProvider>
                 </Provider>,
                 presenceLabelContainer);
