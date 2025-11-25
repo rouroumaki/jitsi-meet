@@ -68,4 +68,4 @@ export const USER_LIMIT_THRESHOLD = 5;
  *
  * @type {string}
  */
-export const WHITEBOARD_PATH_NAME = 'static/whiteboard.html';
+export const WHITEBOARD_PATH_NAME = 'public/whiteboard.html';

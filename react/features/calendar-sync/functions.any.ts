@@ -176,7 +176,7 @@ function _getURLFromEvent(event: { description: string; location: string; notes:
     const urlRegExp
         = `http(s)?://(${knownDomains.join('|')})/${linkTerminatorPattern}+`;
     const schemeRegExp = `${APP_LINK_SCHEME}${linkTerminatorPattern}+`;
-    const excludePattern = '/static/';
+    const excludePattern = '/public/';
     const fieldsToSearch = [
         event.title,
         event.url,

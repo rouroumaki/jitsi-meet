@@ -797,7 +797,7 @@
         "somebody": "Iu",
         "startSilentDescription": "Aliĝu denove al la kunveno por ŝalti sonon",
         "startSilentTitle": "Vi envenis sen sona eligo!",
-        "suboptimalBrowserWarning": "N timas, ke vi ne havos bonegan sperton ĉi tie. Ni klopodas plibonigi tion, sed dume bonvolu provi uzi unu el la <a href='static/recommendedBrowsers.html' target='_blank'>plene subtenataj retumiloj</a>.",
+        "suboptimalBrowserWarning": "N timas, ke vi ne havos bonegan sperton ĉi tie. Ni klopodas plibonigi tion, sed dume bonvolu provi uzi unu el la <a href='public/recommendedBrowsers.html' target='_blank'>plene subtenataj retumiloj</a>.",
         "suboptimalExperienceTitle": "Atentigo pri la retumilo",
         "unmute": "Malsilentigi",
         "videoMutedRemotelyDescription": "Vi ĉiam povas ŝalti ĝin denove.",

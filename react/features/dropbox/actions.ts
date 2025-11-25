@@ -22,7 +22,7 @@ export function authorizeDropbox() {
         // In case deployment is running in subfolder dropbox.redirectURI
         // can be configured.
         const redirectURI
-            = dropbox.redirectURI || `${locationURL?.origin}/static/oauth.html`;
+            = dropbox.redirectURI || `${locationURL?.origin}/public/oauth.html`;
 
         _authorizeDropbox(dropbox.appKey, redirectURI)
             .then(

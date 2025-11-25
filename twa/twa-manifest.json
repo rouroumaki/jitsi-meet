@@ -12,7 +12,7 @@
   "backgroundColor": "#17A0DB",
   "enableNotifications": false,
   "startUrl": "/",
-  "iconUrl": "https://meet.jit.si/static/pwa/icons/icon512.png",
+  "iconUrl": "https://meet.jit.si/public/pwa/icons/icon512.png",
   "splashScreenFadeOutDuration": 300,
   "appVersionName": "1.0.0",
   "appVersionCode": 2000000000,

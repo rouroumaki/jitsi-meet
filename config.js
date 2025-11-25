@@ -384,9 +384,9 @@ var config = {
     //     appKey: '<APP_KEY>', // Specify your app key here.
     //     // A URL to redirect the user to, after authenticating
     //     // by default uses:
-    //     // 'https://jitsi-meet.example.com/static/oauth.html'
+    //     // 'https://jitsi-meet.example.com/public/oauth.html'
     //     redirectURI:
-    //          'https://jitsi-meet.example.com/subfolder/static/oauth.html',
+    //          'https://jitsi-meet.example.com/subfolder/public/oauth.html',
     // },
 
     // configuration for all things recording related. Existing settings will be migrated here in the future.

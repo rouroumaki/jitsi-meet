@@ -3,7 +3,7 @@
  *
  * @type {string}
  */
-export const DIAL_IN_INFO_PAGE_PATH_NAME = 'static/dialInInfo.html';
+export const DIAL_IN_INFO_PAGE_PATH_NAME = 'public/dialInInfo.html';
 
 /**
  * The identifier of the sound to be played when the status of an outgoing call

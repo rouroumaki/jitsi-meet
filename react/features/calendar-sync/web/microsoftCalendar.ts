@@ -52,7 +52,7 @@ const MS_API_CONFIGURATION = {
      *
      * @type {string}
      */
-    REDIRECT_URI: `${window.location.origin}/static/msredirect.html`
+    REDIRECT_URI: `${window.location.origin}/public/msredirect.html`
 };
 
 /**

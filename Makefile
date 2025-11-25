@@ -124,7 +124,7 @@ dev: deploy-init deploy-css deploy-rnnoise-binary deploy-tflite deploy-meet-mode
 
 source-package: compile deploy
 	mkdir -p source_package/jitsi-meet/css && \
-	cp -r *.js *.html resources/*.txt fonts images libs static sounds LICENSE lang source_package/jitsi-meet && \
+	cp -r *.js *.html resources/*.txt fonts images libs public sounds LICENSE lang source_package/jitsi-meet && \
 	cp css/all.css source_package/jitsi-meet/css && \
 	(cd source_package ; tar cjf ../jitsi-meet.tar.bz2 jitsi-meet) && \
 	rm -rf source_package

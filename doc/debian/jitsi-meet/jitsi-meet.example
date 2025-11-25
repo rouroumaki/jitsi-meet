@@ -71,7 +71,7 @@ server {
     ssi_types application/x-javascript application/javascript;
 
     index index.html index.htm;
-    error_page 404 /static/404.html;
+    error_page 404 /public/404.html;
 
     gzip on;
     gzip_types text/plain text/css application/javascript application/json image/x-icon application/octet-stream application/wasm;
@@ -102,7 +102,7 @@ server {
     }
 
     # ensure all static content can always be found first
-    location ~ ^/(libs|css|static|images|fonts|lang|sounds|.well-known)/(.*)$
+    location ~ ^/(libs|css|static|public|images|fonts|lang|sounds|.well-known)/(.*)$
     {
         add_header 'Access-Control-Allow-Origin' '*';
         alias /usr/share/jitsi-meet/$1/$2;

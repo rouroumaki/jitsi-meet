@@ -112,7 +112,7 @@ export class KloudRtasrSDKAdapter implements ISTTSDK {
             // 创建 script 标签加载 SDK
             const script = document.createElement('script');
 
-            script.src = '/static/KloudRtasr.min.js';
+            script.src = '/public/KloudRtasr.min.js';
             script.async = true;
 
             script.onload = () => {

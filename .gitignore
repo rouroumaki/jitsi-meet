@@ -120,5 +120,6 @@ test-results
 
 # KloudRtasr SDK (contains sensitive information)
 static/KloudRtasr.min.js
+public/KloudRtasr.min.js
 deploy.sh
 

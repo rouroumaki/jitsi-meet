@@ -77,7 +77,7 @@ function devServerProxyBypass({ path }) {
             || tpath.startsWith('/images/')
             || tpath.startsWith('/lang/')
             || tpath.startsWith('/sounds/')
-            || tpath.startsWith('/static/')
+            || tpath.startsWith('/public/')
             || tpath.endsWith('.wasm')) {
 
         return tpath;
@@ -325,7 +325,7 @@ module.exports = (_env, argv) => {
             performance: getPerformanceHints(perfHintOptions, 800 * 1024) },
         { ...config,
             entry: {
-                'close3': './static/close3.js'
+                'close3': './public/close3.js'
             },
             plugins: [
                 ...config.plugins,

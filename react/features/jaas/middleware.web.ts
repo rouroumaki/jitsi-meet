@@ -37,7 +37,7 @@ MiddlewareRegistry.register(store => next => action => {
         const { status } = action.payload;
 
         if (status === STATUSES.BLOCKED) {
-            store.dispatch(redirectToStaticPage('/static/planLimit.html'));
+            store.dispatch(redirectToStaticPage('/public/planLimit.html'));
         }
         break;
     }
