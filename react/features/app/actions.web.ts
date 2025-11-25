@@ -94,6 +94,12 @@ export function appNavigate(uri?: string) {
  */
 export function maybeRedirectToWelcomePage(options: { feedbackSubmitted?: boolean; showThankYou?: boolean; } = {}) {
     return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
+        // If origin is kloud.cn, redirect to https://kloud.cn/syncmeet
+        if (window.location.origin === 'https://kloud.cn' || window.location.origin === 'http://kloud.cn') {
+            window.location.href = 'https://kloud.cn/syncmeet';
+
+            return;
+        }
 
         const {
             enableClosePage
