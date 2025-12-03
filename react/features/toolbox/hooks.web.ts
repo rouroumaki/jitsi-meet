@@ -45,7 +45,7 @@ import ShareAudioButton from '../screen-share/components/web/ShareAudioButton';
 import { isScreenAudioSupported, isScreenVideoShared } from '../screen-share/functions';
 import { useSecurityDialogButton } from '../security/hooks.web';
 import SettingsButton from '../settings/components/web/SettingsButton';
-import { useSharedIframeButton } from '../shared-iframe/hooks.web';
+import { useLiveDocAnnotationsButton, useSharedIframeButton } from '../shared-iframe/hooks.web';
 import { useSharedVideoButton } from '../shared-video/hooks';
 import SpeakerStats from '../speaker-stats/components/web/SpeakerStats';
 import { isSpeakerStatsDisabled } from '../speaker-stats/functions';
@@ -288,6 +288,7 @@ export function useToolboxButtons(
     const shareaudio = getShareAudioButton();
     const shareVideo = useSharedVideoButton();
     const sharediframe = useSharedIframeButton();
+    const liveDocAnnotations = useLiveDocAnnotationsButton();
     const whiteboard = useWhiteboardButton();
     const etherpad = useEtherpadButton();
     const virtualBackground = useVirtualBackgroundButton();
@@ -332,7 +333,8 @@ export function useToolboxButtons(
         embedmeeting: embed,
         feedback,
         download: _download,
-        help: _help
+        help: _help,
+        livedocannotations: liveDocAnnotations
     };
     const buttonKeys = Object.keys(buttons) as ToolbarButton[];
 

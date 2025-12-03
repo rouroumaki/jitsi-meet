@@ -4,6 +4,7 @@ import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_
 
 export interface ISharedIframeState {
     active?: boolean;
+    docToolShow?: boolean;
     isScreenShared?: boolean;
     isWhiteboard?: boolean;
     livedocInstanceId?: string;
@@ -14,6 +15,7 @@ export interface ISharedIframeState {
 
 const DEFAULT_STATE: ISharedIframeState = {
     active: false,
+    docToolShow: false, // 默认 Hide
     livedocInstanceId: undefined,
     ownerId: undefined,
     url: undefined,
@@ -32,6 +34,7 @@ ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = 
             livedocInstanceId: action.livedocInstanceId ?? state.livedocInstanceId,
             isScreenShared: action.isScreenShared ?? state.isScreenShared,
             isWhiteboard: action.isWhiteboard ?? state.isWhiteboard,
+            docToolShow: action.docToolShow ?? state.docToolShow,
         };
     case SET_WAS_ACTIVE_BEFORE_SCREENSHARE:
         return {

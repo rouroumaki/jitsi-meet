@@ -113,6 +113,7 @@ const {
     IconYahoo,
     IconLivedoc,
     IconLoading,
+    IconLivedocAnnotations,
 } = Object.keys(DEFAULT_ICON).reduce((exportedIcons: Record<string, any>, key) => {
     return {
         ...exportedIcons,
@@ -234,4 +235,5 @@ export {
     IconYahoo,
     IconLivedoc,
     IconLoading,
+    IconLivedocAnnotations,
 };

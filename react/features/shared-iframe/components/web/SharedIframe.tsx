@@ -110,6 +110,10 @@ class SharedIframe extends Component<IProps> {
                     this.props.dispatch(setSharedIframeState({ isWhiteboard: false }));
                 }
                 break;
+            case 'onklouddoctoolstatchange':
+                // 处理文档工具状态变化消息，data.show 为 1 表示 Show，0 表示 Hide
+                this.props.dispatch(setSharedIframeState({ docToolShow: data.data?.show === 1 }));
+                break;
                 // case 'onkloudjoinmeeting':
                 //     const { iframeUrl } = this.props;
 
@@ -231,7 +235,7 @@ class SharedIframe extends Component<IProps> {
                 <iframe
                     allow = 'fullscreen *; autoplay *'
                     id = 'sharedIframePlayer'
-                    sandbox = 'allow-scripts allow-forms allow-popups allow-pointer-lock allow-same-origin'
+                    sandbox = 'allow-scripts allow-forms allow-popups allow-pointer-lock allow-same-origin allow-modals'
                     src = { iframeUrl }
                     // eslint-disable-next-line react-native/no-inline-styles
                     style = {{ width: '100%', height: '100%', border: 'none' }} />

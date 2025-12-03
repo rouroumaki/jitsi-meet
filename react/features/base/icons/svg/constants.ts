@@ -108,6 +108,7 @@ import { default as IconWifi1Bar } from './wifi-1.svg';
 import { default as IconWifi2Bars } from './wifi-2.svg';
 import { default as IconWifi3Bars } from './wifi-3.svg';
 import { default as IconYahoo } from './yahoo.svg';
+import { default as IconLivedocAnnotations } from './livedoc-annotations.svg';
 
 /**
  * Map containing the default icons.
@@ -222,5 +223,6 @@ export const DEFAULT_ICON: Record<string, any> = {
     IconWifi3Bars,
     IconYahoo,
     IconLivedoc,
-    IconLoading
+    IconLoading,
+    IconLivedocAnnotations,
 };

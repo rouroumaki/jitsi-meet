@@ -14,6 +14,7 @@ import { SHARED_IFRAME_STATUSES } from './constants';
 import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
 export function setSharedIframeState(payload: {
+    docToolShow?: boolean;
     isScreenShared?: boolean;
     isWhiteboard?: boolean;
     livedocInstanceId?: string;

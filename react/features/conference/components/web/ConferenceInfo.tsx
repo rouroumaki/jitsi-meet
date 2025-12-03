@@ -200,7 +200,8 @@ class ConferenceInfo extends Component<IProps> {
      */
     override render() {
         const containerStyle = {
-            justifyContent: this.props._isWhiteboard ? 'flex-end' : 'center'
+            justifyContent: this.props._isWhiteboard ? 'flex-end' : 'center',
+            paddingRight: this.props._isWhiteboard ? '50px' : '0'
         };
 
         return (

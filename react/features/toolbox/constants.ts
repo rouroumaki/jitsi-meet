@@ -160,6 +160,7 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     'invite',
     'linktosalesforce',
     'livestreaming',
+    'livedocannotations',
     'microphone',
     'mute-everyone',
     'mute-video-everyone',
