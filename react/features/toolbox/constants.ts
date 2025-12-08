@@ -30,27 +30,27 @@ export const THRESHOLDS = [
     },
     {
         width: 565,
-        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'reactions', 'participants-pane', 'desktop', 'tileview', 'sharediframe' ]
+        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'reactions', 'participants-pane', 'desktop', 'tileview', 'sharediframe', 'livedocactionmenu' ]
     },
     {
         width: 520,
-        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'participants-pane', 'desktop', 'tileview', 'sharediframe' ]
+        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'participants-pane', 'desktop', 'tileview', 'sharediframe', 'livedocactionmenu' ]
     },
     {
         width: 470,
-        order: [ 'microphone', 'camera', 'sharediframe', 'desktop', 'chat', 'participants-pane' ]
+        order: [ 'microphone', 'camera', 'sharediframe', 'livedocactionmenu', 'desktop', 'chat', 'participants-pane' ]
     },
     {
         width: 420,
-        order: [ 'microphone', 'camera', 'sharediframe', 'desktop', 'chat' ]
+        order: [ 'microphone', 'camera', 'sharediframe', 'livedocactionmenu', 'desktop', 'chat' ]
     },
     {
         width: 370,
-        order: [ 'microphone', 'camera', 'sharediframe', 'desktop' ]
+        order: [ 'microphone', 'camera', 'sharediframe', 'livedocactionmenu', 'desktop' ]
     },
     {
         width: 225,
-        order: [ 'microphone', 'camera', 'sharediframe' ]
+        order: [ 'microphone', 'camera', 'sharediframe', 'livedocactionmenu' ]
     },
     {
         width: 200,
@@ -110,6 +110,7 @@ export const MAIN_TOOLBAR_BUTTONS_PRIORITY = [
     'linktosalesforce',
     'sharedvideo',
     'sharediframe',
+    'livedocactionmenu',
     'shareaudio',
     'noisesuppression',
     // 'whiteboard',
@@ -160,6 +161,7 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     'invite',
     'linktosalesforce',
     'livestreaming',
+    'livedocactionmenu',
     'livedocannotations',
     'microphone',
     'mute-everyone',

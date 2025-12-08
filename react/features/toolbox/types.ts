@@ -32,6 +32,7 @@ export type ToolbarButton = 'camera' |
     'invite' |
     'linktosalesforce' |
     'livestreaming' |
+    'livedocactionmenu' |
     'livedocannotations' |
     'microphone' |
     'mute-everyone' |

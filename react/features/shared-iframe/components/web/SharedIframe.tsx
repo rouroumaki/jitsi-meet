@@ -114,6 +114,14 @@ class SharedIframe extends Component<IProps> {
                 // 处理文档工具状态变化消息，data.show 为 1 表示 Show，0 表示 Hide
                 this.props.dispatch(setSharedIframeState({ docToolShow: data.data?.show === 1 }));
                 break;
+            case 'onKloudMainPanelVisibleChange':
+                // 处理主面板可见性变化消息，data.show 为 1 表示显示，0 表示隐藏
+                this.props.dispatch(setSharedIframeState({ mainPanelVisible: data.data?.show === 1 }));
+                break;
+            case 'onKloudActionDialogVisibleChange':
+                // 处理操作对话框可见性变化消息，data.show 为 1 表示显示，0 表示隐藏
+                this.props.dispatch(setSharedIframeState({ actionDialogVisible: data.data?.show === 1 }));
+                break;
                 // case 'onkloudjoinmeeting':
                 //     const { iframeUrl } = this.props;
 

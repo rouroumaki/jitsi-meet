@@ -1,7 +1,11 @@
 import { IStateful } from '../base/app/types';
 import { IJitsiConference } from '../base/conference/reducer';
+import { VIDEO_TYPE } from '../base/media/constants';
+import { getLocalParticipant } from '../base/participants/functions';
 import { FakeParticipant } from '../base/participants/types';
 import { toState } from '../base/redux/functions';
+import { getVideoTrackByParticipant } from '../base/tracks/functions.any';
+import { isSpotTV } from '../base/util/spot';
 import { getLargeVideoParticipant } from '../large-video/functions';
 
 import { MEETING_SERVER_API_BASE_URL } from './apiConstants';
@@ -129,4 +133,18 @@ export function isSharedIframePlaying(stateful: IStateful): boolean {
     const largeVideoParticipant = getLargeVideoParticipant(state);
 
     return largeVideoParticipant?.fakeParticipant === FakeParticipant.SharedIframe;
+}
+
+export function isLiveDocShowWithScreenSharing(stateful: IStateful): boolean {
+    const state = toState(stateful);
+    const { seeWhatIsBeingShared } = state['features/large-video'];
+    const localParticipantId = getLocalParticipant(state)?.id;
+    const largeVideoParticipant = getLargeVideoParticipant(state);
+    const videoTrack = getVideoTrackByParticipant(state, largeVideoParticipant);
+    const isLocalScreenshareOnLargeVideo = largeVideoParticipant?.id?.includes(localParticipantId ?? '')
+        && videoTrack?.videoType === VIDEO_TYPE.DESKTOP;
+
+    const _displayScreenSharingPlaceholder = Boolean(isLocalScreenshareOnLargeVideo && !seeWhatIsBeingShared && !isSpotTV(state));
+
+    return _displayScreenSharingPlaceholder;
 }

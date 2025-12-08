@@ -1,6 +1,6 @@
-import withBranding from "../components/withBranding";
+import withBranding from '../components/withBranding';
 
-import { DEFAULT_ICON } from "./constants";
+import { DEFAULT_ICON } from './constants';
 
 const {
     IconAddUser,
@@ -114,6 +114,7 @@ const {
     IconLivedoc,
     IconLoading,
     IconLivedocAnnotations,
+    IconLivedocSettings,
 } = Object.keys(DEFAULT_ICON).reduce((exportedIcons: Record<string, any>, key) => {
     return {
         ...exportedIcons,
@@ -236,4 +237,5 @@ export {
     IconLivedoc,
     IconLoading,
     IconLivedocAnnotations,
+    IconLivedocSettings,
 };

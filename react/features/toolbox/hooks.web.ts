@@ -45,7 +45,7 @@ import ShareAudioButton from '../screen-share/components/web/ShareAudioButton';
 import { isScreenAudioSupported, isScreenVideoShared } from '../screen-share/functions';
 import { useSecurityDialogButton } from '../security/hooks.web';
 import SettingsButton from '../settings/components/web/SettingsButton';
-import { useLiveDocAnnotationsButton, useSharedIframeButton } from '../shared-iframe/hooks.web';
+import { useLiveDocActionMenuButton, useLiveDocAnnotationsButton, useSharedIframeButton } from '../shared-iframe/hooks.web';
 import { useSharedVideoButton } from '../shared-video/hooks';
 import SpeakerStats from '../speaker-stats/components/web/SpeakerStats';
 import { isSpeakerStatsDisabled } from '../speaker-stats/functions';
@@ -289,6 +289,7 @@ export function useToolboxButtons(
     const shareVideo = useSharedVideoButton();
     const sharediframe = useSharedIframeButton();
     const liveDocAnnotations = useLiveDocAnnotationsButton();
+    const liveDocActionMenu = useLiveDocActionMenuButton();
     const whiteboard = useWhiteboardButton();
     const etherpad = useEtherpadButton();
     const virtualBackground = useVirtualBackgroundButton();
@@ -322,6 +323,7 @@ export function useToolboxButtons(
         linktosalesforce,
         sharedvideo: shareVideo,
         sharediframe,
+        livedocactionmenu: liveDocActionMenu,
         shareaudio,
         noisesuppression: noiseSuppression,
         whiteboard,

@@ -193,7 +193,7 @@ class ProfileTab extends AbstractDialogTab<IProps, any> {
                         type = 'text'
                         value = { email } />
                 </div>}
-                { authEnabled && this._renderAuth() }
+                {/* { authEnabled && this._renderAuth() } */}
             </div>
         );
     }

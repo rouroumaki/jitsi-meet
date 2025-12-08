@@ -53,6 +53,8 @@ import { default as IconImage } from './image.svg';
 import { default as IconInfoCircle } from './info-circle.svg';
 import { default as IconInfo } from './info.svg';
 import { default as IconRecordLead } from './lead-record.svg';
+import { default as IconLivedocAnnotations } from './livedoc-annotations.svg';
+import { default as IconLivedocSettings } from './livedoc-settings.svg';
 import { default as IconLivedoc } from './livedoc.svg';
 import { default as IconLoading } from './loading.svg';
 import { default as IconMessage } from './message.svg';
@@ -108,7 +110,6 @@ import { default as IconWifi1Bar } from './wifi-1.svg';
 import { default as IconWifi2Bars } from './wifi-2.svg';
 import { default as IconWifi3Bars } from './wifi-3.svg';
 import { default as IconYahoo } from './yahoo.svg';
-import { default as IconLivedocAnnotations } from './livedoc-annotations.svg';
 
 /**
  * Map containing the default icons.
@@ -225,4 +226,5 @@ export const DEFAULT_ICON: Record<string, any> = {
     IconLivedoc,
     IconLoading,
     IconLivedocAnnotations,
+    IconLivedocSettings,
 };

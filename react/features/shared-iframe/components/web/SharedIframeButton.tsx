@@ -3,24 +3,23 @@ import { connect } from 'react-redux';
 
 import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
-import { IconArrowUp, IconLivedoc } from '../../../base/icons/svg';
-import { VIDEO_TYPE } from '../../../base/media/constants';
-import { getLocalParticipant, isLocalParticipantModerator } from '../../../base/participants/functions';
+import { IconArrowDown, IconArrowUp, IconLivedoc } from '../../../base/icons/svg';
+import { isLocalParticipantModerator } from '../../../base/participants/functions';
 import { FakeParticipant } from '../../../base/participants/types';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
 import ToolboxItem from '../../../base/toolbox/components/ToolboxItem.web';
 import ToolboxButtonWithIcon from '../../../base/toolbox/components/web/ToolboxButtonWithIcon';
-import { getVideoTrackByParticipant } from '../../../base/tracks/functions.any';
-import { isSpotTV } from '../../../base/util/spot';
 import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { showWarningNotification } from '../../../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE } from '../../../notifications/constants';
 import { shouldDisplayTileView } from '../../../video-layout/functions.any';
 import { toggleSharedIframe } from '../../actions';
+import { isLiveDocShowWithScreenSharing } from '../../functions';
 
 interface IProps extends AbstractButtonProps {
     _displayScreenSharingPlaceholder: boolean;
     _isActive: boolean;
+    _mainPanelVisible: boolean;
     _reduxState: IReduxState;
 }
 
@@ -115,9 +114,12 @@ class SharedIframeButton extends AbstractButton<IProps> {
 
         // 只有在 livedoc active 时才显示小箭头图标
         if (this.props._isActive || this.props._displayScreenSharingPlaceholder) {
+            // 根据主面板可见状态决定箭头方向：显示时向下，隐藏时向上
+            const arrowIcon = this.props._mainPanelVisible ? IconArrowDown : IconArrowUp;
+
             return (
                 <ToolboxButtonWithIcon
-                    icon = { IconArrowUp }
+                    icon = { arrowIcon }
                     iconDisabled = { false }
                     iconId = 'shared-iframe-icon-button'
                     iconTooltip = 'Live Doc Menu'
@@ -134,17 +136,15 @@ class SharedIframeButton extends AbstractButton<IProps> {
 function _mapStateToProps(state: IReduxState) {
     const onStage = getLargeVideoParticipant(state)?.fakeParticipant === FakeParticipant.SharedIframe;
     const tileView = shouldDisplayTileView(state);
-    const { seeWhatIsBeingShared } = state['features/large-video'];
-    const localParticipantId = getLocalParticipant(state)?.id;
-    const largeVideoParticipant = getLargeVideoParticipant(state);
-    const videoTrack = getVideoTrackByParticipant(state, largeVideoParticipant);
-    const isLocalScreenshareOnLargeVideo = largeVideoParticipant?.id?.includes(localParticipantId ?? '')
-        && videoTrack?.videoType === VIDEO_TYPE.DESKTOP;
+    const mainPanelVisible = state['features/shared-iframe']?.mainPanelVisible ?? true;
+
+    const _displayScreenSharingPlaceholder = isLiveDocShowWithScreenSharing(state);
 
     return {
         _isActive: onStage && !tileView,
+        _mainPanelVisible: mainPanelVisible,
         _reduxState: state,
-        _displayScreenSharingPlaceholder: Boolean(isLocalScreenshareOnLargeVideo && !seeWhatIsBeingShared && !isSpotTV(state)),
+        _displayScreenSharingPlaceholder,
     };
 }
 
