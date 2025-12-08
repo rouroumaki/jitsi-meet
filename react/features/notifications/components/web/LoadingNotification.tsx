@@ -92,7 +92,8 @@ const LoadingNotification = ({
     title,
     titleArguments,
     titleKey,
-    uid
+    uid,
+    disableClosing,
 }: IProps) => {
     const { classes, theme } = useStyles();
     const { t } = useTranslation();
@@ -144,15 +145,18 @@ const LoadingNotification = ({
                     </span>
                     {renderDescription()}
                 </div>
-                <Icon
-                    className = { classes.closeIcon }
-                    color = { theme.palette.icon04 }
-                    id = 'close-loading-notification'
-                    onClick = { onDismiss }
-                    size = { 20 }
-                    src = { IconCloseLarge }
-                    tabIndex = { 0 }
-                    testId = { `${titleKey || descriptionKey}-dismiss` } />
+                {!disableClosing && (
+                    <Icon
+                        className = { classes.closeIcon }
+                        color = { theme.palette.icon04 }
+                        id = 'close-loading-notification'
+                        onClick = { onDismiss }
+                        size = { 20 }
+                        src = { IconCloseLarge }
+                        tabIndex = { 0 }
+                        testId = { `${titleKey || descriptionKey}-dismiss` } />
+                )}
+
             </div>
         </div>
     );
