@@ -5,6 +5,7 @@ import { MEETING_SERVER_API_BASE_URL } from '../shared-iframe/apiConstants';
 
 import { updateLocalSubtitle } from './actions';
 import logger from './logger';
+import { detectLanguage } from './translation';
 import { ISTTSDK } from './types';
 
 /**
@@ -41,6 +42,7 @@ interface ILocationCache {
 interface IKloudRtasrHelper {
     OnMessage: (msg: IKloudRtasrMessage) => void;
     SetServerID: (serverId: number) => void;
+    SetSpeakingLanguageID: (languageId: number) => void;
     Start: (deviceId?: string) => void;
     Stop: () => void;
     SwitchDevice: (deviceId: string) => void;
@@ -208,7 +210,7 @@ export class KloudRtasrSDKAdapter implements ISTTSDK {
      * @param {boolean} useCache - 是否使用缓存结果，默认为 true.
      * @returns {Promise<boolean>} 如果用户在中国返回 true，否则返回 false.
      */
-    private async getIsInChina(useCache: boolean = true): Promise<boolean> {
+    async getIsInChina(useCache: boolean = true): Promise<boolean> {
         // 如果使用缓存，先检查内存缓存
         if (useCache && this._isIpInChina !== -1) {
             return this._isIpInChina === 1;
@@ -320,6 +322,7 @@ export class KloudRtasrSDKAdapter implements ISTTSDK {
             // 切换 ServerID
             this._currentServerID = targetServerID;
             this._helper.SetServerID(targetServerID);
+            this.setSpeakingLanguageID();
 
             // 重新启动
             this._helper.Start(deviceId);
@@ -358,6 +361,7 @@ export class KloudRtasrSDKAdapter implements ISTTSDK {
         // 默认使用腾讯（中国），不等待检测完成
         this._currentServerID = 3;
         this._helper.SetServerID(this._currentServerID);
+        this.setSpeakingLanguageID();
         logger.info('ServerID set to default (Tencent)', { serverID: this._currentServerID });
 
         // 设置消息回调
@@ -493,7 +497,7 @@ export class KloudRtasrSDKAdapter implements ISTTSDK {
                     } ],
                     is_interim: isInterim,
                     timestamp: Date.now(),
-                    language: 'zh-CN', // 默认中文
+                    language: detectLanguage(msg.src),
                     stability: isInterim ? 0.5 : 1.0 // 中间结果设置较低稳定性
                 };
 
@@ -555,6 +559,75 @@ export class KloudRtasrSDKAdapter implements ISTTSDK {
                 throw error;
             }
         }
+    }
+
+    /**
+     * 设置说话语言 ID.
+     * 如果 languageCode 为 null，根据 isInChina 设置默认值（国内=1中文，海外=0英语）.
+     *
+     * @returns {Promise<void>}
+     */
+    async setSpeakingLanguageID(): Promise<void> {
+        if (!this._helper) {
+            logger.warn('Helper not available, cannot set speaking language ID');
+
+            return;
+        }
+
+        const settings = this.loadSettings();
+        let languageCode = 'zh'; // 'en', 'zh', 'ko'
+
+        if (settings.speakLanguages[0]) {
+            languageCode = settings.speakLanguages[0];
+        } else {
+            const isInChina = await this.getIsInChina();
+
+            languageCode = isInChina ? 'zh' : 'en';
+        }
+
+        let languageId: number;
+
+        const languageMap: Record<string, number> = {
+            'en': 0,
+            'zh': 1,
+            'ko': 2
+        };
+
+        languageId = languageMap[languageCode];
+
+        if (languageId === undefined) {
+            logger.warn('Unknown language code, defaulting to English', { languageCode });
+            languageId = 0;
+        } else {
+            logger.info('Setting speaking language ID', { languageCode, languageId });
+        }
+
+        try {
+            this._helper.SetSpeakingLanguageID(languageId);
+            logger.info('Speaking language ID set successfully', { languageId });
+        } catch (error) {
+            logger.error('Failed to set speaking language ID', error);
+            throw error;
+        }
+    }
+
+    loadSettings() {
+        try {
+            const STORAGE_KEY = 'stt-language-settings';
+            const saved = localStorage.getItem(STORAGE_KEY);
+
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (error) {
+            // Ignore parse errors
+        }
+
+        return {
+            speakLanguages: [],
+            readLanguage: 'zh',
+            subtitleVisible: true
+        };
     }
 }
 

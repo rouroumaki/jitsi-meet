@@ -4,15 +4,19 @@ import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../app/types';
+import { openDialog } from '../../base/dialog/actions';
 import { translate } from '../../base/i18n/functions';
 import { withPixelLineHeight } from '../../base/styles/functions.web';
 import { MultiSelectItem } from '../../base/ui/components/types';
+import Button from '../../base/ui/components/web/Button';
 import Dialog from '../../base/ui/components/web/Dialog';
-import MultiSelect from '../../base/ui/components/web/MultiSelect';
-import Select from '../../base/ui/components/web/Select';
+import Input from '../../base/ui/components/web/Input';
 import Switch from '../../base/ui/components/web/Switch';
 import { setSubtitleVisible as setSubtitleVisibleAction } from '../actions';
 import { isSubtitleVisible } from '../functions';
+import { sttSDKManager } from '../sdkManager';
+
+import LanguageSelectDialog from './LanguageSelectDialog';
 
 const STORAGE_KEY = 'stt-language-settings';
 
@@ -28,10 +32,18 @@ const useStyles = makeStyles()(theme => {
             flexDirection: 'column',
             marginBottom: theme.spacing(4),
         },
+        labelRow: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: theme.spacing(2)
+        },
         label: {
             color: theme.palette.text01,
             ...withPixelLineHeight(theme.typography.bodyShortRegular),
-            marginBottom: theme.spacing(2)
+        },
+        selectButton: {
+            marginLeft: theme.spacing(2)
         },
         bottomMargin: {
             marginBottom: theme.spacing(2)
@@ -67,7 +79,8 @@ function loadSettings() {
 
     return {
         speakLanguages: [],
-        readLanguage: 'zh',
+        readLanguages: [ 'zh' ],
+        defaultReadLanguage: 'zh',
         subtitleVisible: true
     };
 }
@@ -78,7 +91,7 @@ function loadSettings() {
  * @param {Object} settings - The settings to save.
  * @returns {void}
  */
-function saveSettings(settings: { readLanguage: string; speakLanguages: string[]; subtitleVisible: boolean; }) {
+function saveSettings(settings: { defaultReadLanguage?: string; readLanguages: string[]; speakLanguages: string[]; subtitleVisible: boolean; }) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
@@ -94,10 +107,9 @@ function saveSettings(settings: { readLanguage: string; speakLanguages: string[]
  */
 function STTSettingsDialog({ t, dispatch, _isSubtitleVisible }: IProps) {
     const { classes } = useStyles();
-    const [ filterValue, setFilterValue ] = useState('');
-    const [ isMultiSelectOpen, setIsMultiSelectOpen ] = useState(false);
-    const [ readLanguage, setReadLanguage ] = useState('zh');
+    const [ readLanguages, setReadLanguages ] = useState<MultiSelectItem[]>([]);
     const [ selectedSpeakLanguages, setSelectedSpeakLanguages ] = useState<MultiSelectItem[]>([]);
+    const [ defaultReadLanguage, setDefaultReadLanguage ] = useState<MultiSelectItem | null>(null);
     const [ subtitleVisible, setSubtitleVisible ] = useState(_isSubtitleVisible ?? true);
 
     /**
@@ -114,6 +126,10 @@ function STTSettingsDialog({ t, dispatch, _isSubtitleVisible }: IProps) {
             {
                 content: t('toolbar.sttLanguage.english'),
                 value: 'en'
+            },
+            {
+                content: t('toolbar.sttLanguage.korean'),
+                value: 'ko'
             }
         ];
     }, [ t ]);
@@ -128,82 +144,40 @@ function STTSettingsDialog({ t, dispatch, _isSubtitleVisible }: IProps) {
             .map((lang: string) => availableLanguages.find(item => item.value === lang))
             .filter(Boolean) as MultiSelectItem[];
 
-        setReadLanguage(savedSettings.readLanguage || 'zh');
+        // Convert saved read languages to MultiSelectItem format
+        // Handle backward compatibility: if readLanguage exists (old format), convert it
+        const readLangs = savedSettings.readLanguages || (savedSettings.readLanguage ? [ savedSettings.readLanguage ] : [ 'zh' ]);
+        const savedReadLanguages = readLangs
+            .map((lang: string) => availableLanguages.find(item => item.value === lang))
+            .filter(Boolean) as MultiSelectItem[];
+
+        const finalReadLanguages = savedReadLanguages.length > 0 ? savedReadLanguages : [ availableLanguages[0] ];
+
+        setReadLanguages(finalReadLanguages);
         setSelectedSpeakLanguages(savedSpeakLanguages);
+
+        // Set default read language
+        const savedDefaultReadLang = savedSettings.defaultReadLanguage;
+
+        if (savedDefaultReadLang) {
+            const defaultLang = availableLanguages.find(item => item.value === savedDefaultReadLang);
+
+            if (defaultLang && finalReadLanguages.find(lang => lang.value === defaultLang.value)) {
+                setDefaultReadLanguage(defaultLang);
+            } else if (finalReadLanguages.length === 1) {
+                setDefaultReadLanguage(finalReadLanguages[0]);
+            }
+        } else if (finalReadLanguages.length === 1) {
+            // If only one read language, set it as default
+
+            setDefaultReadLanguage(finalReadLanguages[0]);
+        }
+
         // Load subtitleVisible from localStorage, fallback to Redux state or true
         setSubtitleVisible(savedSettings.subtitleVisible !== undefined
             ? savedSettings.subtitleVisible
             : (_isSubtitleVisible ?? true));
     }, [ getAvailableLanguages, _isSubtitleVisible ]);
-
-    /**
-     * Handles filter value change for multi-select.
-     *
-     * @param {string} value - The new filter value.
-     * @returns {void}
-     */
-    const onFilterChange = useCallback((value: string) => {
-        setFilterValue(value);
-        setIsMultiSelectOpen(true);
-    }, []);
-
-    /**
-     * Handles input focus to show available options.
-     *
-     * @returns {void}
-     */
-    const onInputFocus = useCallback(() => {
-        setIsMultiSelectOpen(true);
-    }, []);
-
-    /**
-     * Handles clicking outside to close the dropdown.
-     *
-     * @returns {void}
-     */
-    const onInputBlur = useCallback(() => {
-        // Delay closing to allow item selection
-        setTimeout(() => {
-            setIsMultiSelectOpen(false);
-        }, 200);
-    }, []);
-
-    /**
-     * Handles selection of an item in multi-select.
-     *
-     * @param {MultiSelectItem} item - The selected item.
-     * @returns {void}
-     */
-    const onMultiSelectItemSelected = useCallback((item: MultiSelectItem) => {
-        // Check if already selected
-        if (selectedSpeakLanguages.find(lang => lang.value === item.value)) {
-            return;
-        }
-
-        setSelectedSpeakLanguages([ ...selectedSpeakLanguages, item ]);
-        setFilterValue('');
-        setIsMultiSelectOpen(false);
-    }, [ selectedSpeakLanguages ]);
-
-    /**
-     * Handles removal of an item from multi-select.
-     *
-     * @param {MultiSelectItem} item - The item to remove.
-     * @returns {void}
-     */
-    const onMultiSelectItemRemoved = useCallback((item: MultiSelectItem) => {
-        setSelectedSpeakLanguages(selectedSpeakLanguages.filter(lang => lang.value !== item.value));
-    }, [ selectedSpeakLanguages ]);
-
-    /**
-     * Handles read language change.
-     *
-     * @param {ChangeEvent<HTMLSelectElement>} e - The change event.
-     * @returns {void}
-     */
-    const onReadLanguageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-        setReadLanguage(e.target.value);
-    }, []);
 
     /**
      * Handles subtitle visibility toggle.
@@ -224,29 +198,162 @@ function STTSettingsDialog({ t, dispatch, _isSubtitleVisible }: IProps) {
      *
      * @returns {void}
      */
-    const onSubmit = useCallback(() => {
+    // Auto-update defaultReadLanguage when readLanguages changes
+    useEffect(() => {
+        if (readLanguages.length === 1) {
+            setDefaultReadLanguage(readLanguages[0]);
+        } else if (defaultReadLanguage && !readLanguages.find(lang => lang.value === defaultReadLanguage.value)) {
+            // If current default is not in readLanguages, clear it
+            setDefaultReadLanguage(null);
+        }
+    }, [ readLanguages, defaultReadLanguage ]);
+
+    const onSubmit = useCallback(async (params = {}) => {
         const settings = {
             speakLanguages: selectedSpeakLanguages.map(item => item.value),
-            readLanguage,
-            subtitleVisible
+            readLanguages: readLanguages.map(item => item.value),
+            defaultReadLanguage: defaultReadLanguage?.value,
+            subtitleVisible,
+            ...params
         };
 
         saveSettings(settings);
         if (dispatch) {
             dispatch(setSubtitleVisibleAction(subtitleVisible));
         }
-    }, [ selectedSpeakLanguages, readLanguage, subtitleVisible, dispatch ]);
 
-    const availableLanguages = getAvailableLanguages();
+        // 调用 SDK 设置说话语言
+        try {
+            await sttSDKManager.setSpeakingLanguageID();
+        } catch (error) {
+            // 记录错误但不阻止设置保存
+            console.error('Failed to set speaking language ID', error);
+        }
+    }, [ selectedSpeakLanguages, readLanguages, defaultReadLanguage, subtitleVisible, dispatch ]);
 
-    // Filter available languages based on filter value and exclude already selected
-    // When dropdown is open, show all available languages (filtered by input if any)
-    const filteredLanguages = isMultiSelectOpen ? availableLanguages.filter(item => {
-        const matchesFilter = !filterValue || item.content.toLowerCase().includes(filterValue.toLowerCase());
-        const notSelected = !selectedSpeakLanguages.find(selected => selected.value === item.value);
+    /**
+     * Handles opening the language selection dialog for speak languages.
+     *
+     * @returns {void}
+     */
+    const onOpenSpeakLanguagesDialog = useCallback(() => {
+        if (dispatch) {
+            dispatch(openDialog(LanguageSelectDialog, {
+                availableLanguages: getAvailableLanguages(),
+                onConfirm: (selected: MultiSelectItem[]) => {
+                    setSelectedSpeakLanguages(selected);
+                    onSubmit({ speakLanguages: selected.map(item => item.value) });
 
-        return matchesFilter && notSelected;
-    }) : [];
+                    // Reopen STTSettingsDialog after LanguageSelectDialog closes
+
+                    setTimeout(() => {
+                        const STTSettingsDialogComponent = require('./STTSettingsDialog').default;
+
+                        dispatch(openDialog(STTSettingsDialogComponent));
+                    }, 100);
+                },
+                onCancel: () => {
+                    // Reopen STTSettingsDialog after LanguageSelectDialog closes
+
+                    setTimeout(() => {
+                        const STTSettingsDialogComponent = require('./STTSettingsDialog').default;
+
+                        dispatch(openDialog(STTSettingsDialogComponent));
+                    }, 100);
+                },
+                selectedLanguages: selectedSpeakLanguages,
+                titleKey: 'toolbar.sttSettings.selectSpeakLanguages'
+            }));
+        }
+    }, [ dispatch, getAvailableLanguages, selectedSpeakLanguages ]);
+
+
+    /**
+     * Handles opening the language selection dialog for read languages.
+     *
+     * @returns {void}
+     */
+    const onOpenReadLanguagesDialog = useCallback(() => {
+        if (dispatch) {
+            dispatch(openDialog(LanguageSelectDialog, {
+                availableLanguages: getAvailableLanguages(),
+                onConfirm: (selected: MultiSelectItem[]) => {
+                    const newReadLanguages = selected.length > 0 ? selected : [ getAvailableLanguages()[0] ];
+
+                    setReadLanguages(newReadLanguages);
+                    onSubmit({ readLanguages: newReadLanguages.map(item => item.value) });
+
+                    // Reopen STTSettingsDialog after LanguageSelectDialog closes
+
+                    setTimeout(() => {
+                        const STTSettingsDialogComponent = require('./STTSettingsDialog').default;
+
+                        dispatch(openDialog(STTSettingsDialogComponent));
+                    }, 100);
+                },
+                onCancel: () => {
+                    // Reopen STTSettingsDialog after LanguageSelectDialog closes
+
+                    setTimeout(() => {
+                        const STTSettingsDialogComponent = require('./STTSettingsDialog').default;
+
+                        dispatch(openDialog(STTSettingsDialogComponent));
+                    }, 100);
+                },
+                selectedLanguages: readLanguages,
+                titleKey: 'toolbar.sttSettings.selectReadLanguage'
+            }));
+        }
+    }, [ dispatch, getAvailableLanguages, readLanguages ]);
+
+
+    /**
+     * Handles opening the default read language selection dialog.
+     *
+     * @returns {void}
+     */
+    const onOpenDefaultReadLanguageDialog = useCallback(() => {
+        if (dispatch && readLanguages.length > 1) {
+            dispatch(openDialog(LanguageSelectDialog, {
+                availableLanguages: readLanguages,
+                onConfirm: (selected: MultiSelectItem[]) => {
+                    if (selected.length > 0) {
+                        setDefaultReadLanguage(selected[0]);
+                        onSubmit({ defaultReadLanguage: selected[0].value });
+                    }
+
+                    // Reopen STTSettingsDialog after LanguageSelectDialog closes
+                    setTimeout(() => {
+                        const STTSettingsDialogComponent = require('./STTSettingsDialog').default;
+
+                        dispatch(openDialog(STTSettingsDialogComponent));
+                    }, 100);
+                },
+                onCancel: () => {
+                    // Reopen STTSettingsDialog after LanguageSelectDialog closes
+                    setTimeout(() => {
+                        const STTSettingsDialogComponent = require('./STTSettingsDialog').default;
+
+                        dispatch(openDialog(STTSettingsDialogComponent));
+                    }, 100);
+                },
+                selectedLanguages: defaultReadLanguage ? [ defaultReadLanguage ] : [],
+                singleSelect: true,
+                titleKey: 'toolbar.sttSettings.selectDefaultReadLanguage'
+            }));
+        }
+    }, [ dispatch, readLanguages, defaultReadLanguage, onSubmit ]);
+
+    // Format selected languages for display
+    const speakLanguagesDisplay = selectedSpeakLanguages.length > 0
+        ? selectedSpeakLanguages.map(item => item.content).join(', ')
+        : '';
+
+    const readLanguagesDisplay = readLanguages.length > 0
+        ? readLanguages.map(item => item.content).join(', ')
+        : '';
+
+    const defaultReadLanguageDisplay = defaultReadLanguage ? defaultReadLanguage.content : '';
 
     return (
         <Dialog
@@ -267,36 +374,66 @@ function STTSettingsDialog({ t, dispatch, _isSubtitleVisible }: IProps) {
                     onChange = { onSubtitleVisibilityToggle } />
             </div>
             <div className = { classes.selectContainer }>
-                <label
-                    className = { classes.label }
-                    htmlFor = 'stt-speak-languages'>
-                    {t('toolbar.sttSettings.selectSpeakLanguages')}
-                </label>
-                <MultiSelect
-                    filterValue = { filterValue }
+                <div className = { classes.labelRow }>
+                    <label
+                        className = { classes.label }
+                        htmlFor = 'stt-speak-languages'>
+                        {t('toolbar.sttSettings.selectSpeakLanguages')}
+                    </label>
+                    <Button
+                        className = { classes.selectButton }
+                        label = 'Select'
+                        onClick = { onOpenSpeakLanguagesDialog }
+                        size = 'small'
+                        type = 'secondary' />
+                </div>
+                <Input
                     id = 'stt-speak-languages'
-                    isOpen = { isMultiSelectOpen }
-                    items = { filteredLanguages }
-                    noMatchesText = { t('toolbar.sttSettings.noLanguagesFound') }
-                    onBlur = { onInputBlur }
-                    onFilterChange = { onFilterChange }
-                    onFocus = { onInputFocus }
-                    onRemoved = { onMultiSelectItemRemoved }
-                    onSelected = { onMultiSelectItemSelected }
-                    placeholder = { t('toolbar.sttSettings.selectSpeakLanguages') }
-                    selectedItems = { selectedSpeakLanguages } />
+                    readOnly = { true }
+                    value = { speakLanguagesDisplay } />
             </div>
             <div className = { classes.bottomMargin }>
-                <Select
+                <div className = { classes.labelRow }>
+                    <label
+                        className = { classes.label }
+                        htmlFor = 'stt-read-language'>
+                        {t('toolbar.sttSettings.selectReadLanguage')}
+                    </label>
+                    <Button
+                        className = { classes.selectButton }
+                        label = 'Select'
+                        onClick = { onOpenReadLanguagesDialog }
+                        size = 'small'
+                        type = 'secondary' />
+                </div>
+                <Input
                     id = 'stt-read-language'
-                    label = { t('toolbar.sttSettings.selectReadLanguage') }
-                    onChange = { onReadLanguageChange }
-                    options = { availableLanguages.map(item => ({
-                        label: item.content,
-                        value: item.value
-                    })) }
-                    value = { readLanguage } />
+                    readOnly = { true }
+                    value = { readLanguagesDisplay } />
             </div>
+            {readLanguages.length > 0 && (
+                <div className = { classes.bottomMargin }>
+                    <div className = { classes.labelRow }>
+                        <label
+                            className = { classes.label }
+                            htmlFor = 'stt-default-read-language'>
+                            {t('toolbar.sttSettings.selectDefaultReadLanguage')}
+                        </label>
+                        {readLanguages.length > 1 && (
+                            <Button
+                                className = { classes.selectButton }
+                                label = 'Select'
+                                onClick = { onOpenDefaultReadLanguageDialog }
+                                size = 'small'
+                                type = 'secondary' />
+                        )}
+                    </div>
+                    <Input
+                        id = 'stt-default-read-language'
+                        readOnly = { true }
+                        value = { defaultReadLanguageDisplay } />
+                </div>
+            )}
         </Dialog>
     );
 }

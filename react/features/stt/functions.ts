@@ -36,6 +36,58 @@ function loadSettings() {
 }
 
 /**
+ * Gets read languages from settings.
+ *
+ * @returns {string[]} Array of read language codes (zh, en, ko, etc.).
+ */
+export function getReadLanguages(): string[] {
+    const settings = loadSettings();
+
+    return settings?.readLanguages || [ 'zh' ];
+}
+
+/**
+ * Gets default read language from settings.
+ *
+ * @returns {string} Default read language code (zh, en, ko, etc.).
+ */
+export function getDefaultReadLanguage(): string {
+    const settings = loadSettings();
+    const readLanguages = getReadLanguages();
+
+    // If defaultReadLanguage is set and is in readLanguages, use it
+    if (settings?.defaultReadLanguage && readLanguages.includes(settings.defaultReadLanguage)) {
+        return settings.defaultReadLanguage;
+    }
+
+    // If only one read language, use it as default
+    if (readLanguages.length === 1) {
+        return readLanguages[0];
+    }
+
+    // Fallback to first read language or 'zh'
+    return readLanguages[0] || 'zh';
+}
+
+/**
+ * Maps language code to API format.
+ *
+ * @param {string} langCode - Language code (zh, en, ko, etc.).
+ * @returns {string} Language code in API format (cn, en, ko, ja).
+ */
+export function mapLanguageToAPIFormat(langCode: string): string {
+    const mapping: { [key: string]: string; } = {
+        'zh': 'cn',
+        'en': 'en',
+        'ko': 'ko',
+        'ja': 'ja'
+    };
+
+    return mapping[langCode] || langCode;
+}
+
+
+/**
  * Is subtitle display currently visible.
  * Reads from localStorage first, falls back to Redux state.
  *

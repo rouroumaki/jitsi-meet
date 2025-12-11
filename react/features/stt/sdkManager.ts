@@ -1,3 +1,4 @@
+import { KloudRtasrSDKAdapter } from './KloudRtasrSDKAdapter';
 import logger from './logger';
 import { ISTTSDK } from './types';
 
@@ -91,6 +92,28 @@ class STTSDKManager {
      */
     isRunning(): boolean {
         return this._isSDKRunning;
+    }
+
+    /**
+     * Set the speaking language ID.
+     *
+     * @returns {Promise<void>}
+     */
+    async setSpeakingLanguageID(): Promise<void> {
+        if (!this._sttSDK) {
+            logger.warn('STT SDK not set, cannot set speaking language ID');
+
+            return;
+        }
+
+        // Check if SDK is KloudRtasrSDKAdapter instance
+        if (this._sttSDK instanceof KloudRtasrSDKAdapter) {
+            try {
+                await this._sttSDK.setSpeakingLanguageID();
+            } catch (error) {
+                logger.error('Failed to set speaking language ID', error);
+            }
+        }
     }
 }
 

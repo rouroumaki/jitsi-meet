@@ -122,4 +122,5 @@ test-results
 static/KloudRtasr.min.js
 public/KloudRtasr.min.js
 deploy.sh
+deploy
 

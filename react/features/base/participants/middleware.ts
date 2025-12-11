@@ -20,7 +20,7 @@ import { CALLING, INVITED } from '../../presence-status/constants';
 import { RAISE_HAND_SOUND_ID } from '../../reactions/constants';
 import { RECORDING_OFF_SOUND_ID, RECORDING_ON_SOUND_ID } from '../../recording/constants';
 import { APP_WILL_MOUNT, APP_WILL_UNMOUNT } from '../app/actionTypes';
-import { CONFERENCE_JOINED, CONFERENCE_WILL_JOIN } from '../conference/actionTypes';
+import { CONFERENCE_JOINED, CONFERENCE_WILL_JOIN, ENDPOINT_MESSAGE_RECEIVED } from '../conference/actionTypes';
 import { forEachConference, getCurrentConference } from '../conference/functions';
 import { IJitsiConference } from '../conference/reducer';
 import { SET_CONFIG } from '../config/actionTypes';
@@ -85,6 +85,8 @@ import { IJitsiParticipant } from './types';
 
 import './subscriber';
 
+const JSON_TYPE_COL_HOST_GRANTED = 'col-host-granted';
+
 /**
  * Middleware that captures CONFERENCE_JOINED and CONFERENCE_LEFT actions and
  * updates respectively ID of local participant.
@@ -144,6 +146,12 @@ MiddlewareRegistry.register(store => next => action => {
         const { conference } = store.getState()['features/base/conference'];
 
         conference?.grantOwner(action.id);
+
+        conference?.sendMessage({
+            type: JSON_TYPE_COL_HOST_GRANTED,
+            id: action.id
+        }, '');
+
         break;
     }
 
@@ -361,6 +369,25 @@ MiddlewareRegistry.register(store => next => action => {
                 id: identifier,
                 name
             }));
+        }
+        break;
+    }
+
+    case ENDPOINT_MESSAGE_RECEIVED: {
+        const { data } = action;
+
+        // Handle col-host-granted message
+        if (data?.type === JSON_TYPE_COL_HOST_GRANTED && data?.id) {
+            const localParticipant = getLocalParticipant(store.getState());
+
+            // If the message is for the local participant, mark them as col-host
+            if (localParticipant && localParticipant.id === data.id) {
+                store.dispatch(participantUpdated({
+                    id: localParticipant.id,
+                    local: true,
+                    colHost: true
+                }));
+            }
         }
         break;
     }

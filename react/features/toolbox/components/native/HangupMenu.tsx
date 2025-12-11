@@ -11,7 +11,7 @@ import { endConference } from '../../../base/conference/actions';
 import { hideSheet } from '../../../base/dialog/actions';
 import BottomSheet from '../../../base/dialog/components/native/BottomSheet';
 import { PARTICIPANT_ROLE } from '../../../base/participants/constants';
-import { getLocalParticipant } from '../../../base/participants/functions';
+import { getLocalParticipant, isLocalParticipantColHost } from '../../../base/participants/functions';
 import Button from '../../../base/ui/components/native/Button';
 import { BUTTON_TYPES } from '../../../base/ui/constants.native';
 import { moveToRoom } from '../../../breakout-rooms/actions';
@@ -28,6 +28,7 @@ function HangupMenu() {
     const inBreakoutRoom = useSelector(isInBreakoutRoom);
     const isModerator = useSelector((state: IReduxState) =>
         getLocalParticipant(state)?.role === PARTICIPANT_ROLE.MODERATOR);
+    const isColHost = useSelector(isLocalParticipantColHost);
     const { DESTRUCTIVE, SECONDARY } = BUTTON_TYPES;
 
     const handleEndConference = useCallback(() => {
@@ -51,7 +52,7 @@ function HangupMenu() {
     return (
         <BottomSheet>
             <View style = { _styles.hangupMenuContainer }>
-                { isModerator && <Button
+                { isModerator && !isColHost && <Button
                     accessibilityLabel = 'toolbar.endConference'
                     labelKey = 'toolbar.endConference'
                     onClick = { handleEndConference }

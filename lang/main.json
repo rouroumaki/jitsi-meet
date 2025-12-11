@@ -1433,13 +1433,15 @@
         "stt": "Subtitles",
         "sttLanguage": {
             "chinese": "Chinese",
-            "english": "English"
+            "english": "English",
+            "korean": "Korean"
         },
         "sttSettings": {
             "title": "Closed Caption Settings",
             "selectSpeakLanguages": "Select language I can speak",
             "selectReadLanguage": "Select language I can read",
-            "noLanguagesFound": "No languages found"
+            "noLanguagesFound": "No languages found",
+            "selectDefaultReadLanguage": "Select default read language"
         },
         "noisyAudioInputTitle": "Your microphone appears to be noisy!",
         "openChat": "Open chat",

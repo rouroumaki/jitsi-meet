@@ -13,8 +13,11 @@ import { TRACK_ADDED } from '../base/tracks/actionTypes';
 import { getLocalJitsiAudioTrack } from '../base/tracks/functions.any';
 
 import { receiveRemoteSubtitle, receiveSTTStatusChanged } from './actions';
-import { initializeAndStartSTT, isSTTEnabled } from './functions';
+// eslint-disable-next-line no-unused-vars
+import { getDefaultReadLanguage, getReadLanguages, initializeAndStartSTT, isSTTEnabled, mapLanguageToAPIFormat } from './functions';
 import { sttSDKManager } from './sdkManager';
+// eslint-disable-next-line no-unused-vars
+import { translateText } from './translation';
 
 /**
  * The type of json-message which indicates that json carries a
@@ -254,13 +257,50 @@ function _endpointMessageReceived(store: IStore, next: Function, action: AnyActi
     }
 
     const { dispatch } = store;
-    const { participant, transcript, is_interim: isInterim } = json;
+    const { participant, transcript, is_interim: isInterim, language } = json;
     const participantName = participant?.name || 'Unknown';
     const text = transcript?.[0]?.text || '';
 
-    if (text) {
-        dispatch(receiveRemoteSubtitle(participantName, text, isInterim));
+    if (!text) {
+        return next(action);
     }
+
+    // Handle translation logic asynchronously
+    (async () => {
+        try {
+            // Get user's read languages and default read language
+            const readLanguages = getReadLanguages();
+            const defaultReadLanguage = getDefaultReadLanguage();
+
+            const detectedLangInReadFormat = language === 'cn' ? 'zh' : language;
+
+            // Check if detected language is in readLanguages
+            const canRead = readLanguages.includes(detectedLangInReadFormat);
+
+            let finalText = text;
+
+            if (!canRead && language !== 'auto') {
+                // Need to translate
+                const targetLangId = mapLanguageToAPIFormat(defaultReadLanguage);
+
+                try {
+                    finalText = await translateText(text, targetLangId, language);
+                } catch (translationError) {
+                    console.error('Translation failed, showing original text:', translationError);
+                    // Fallback to original text if translation fails
+                    finalText = text;
+                }
+            }
+
+            // For interim results, we might want to skip translation to avoid too many API calls
+            // But for now, we'll translate them too
+            dispatch(receiveRemoteSubtitle(participantName, finalText, isInterim));
+        } catch (error) {
+            console.error('Error processing remote subtitle:', error);
+            // Fallback to original text on any error
+            dispatch(receiveRemoteSubtitle(participantName, text, isInterim));
+        }
+    })();
 
     return next(action);
 }

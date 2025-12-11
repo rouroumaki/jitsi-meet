@@ -23,7 +23,7 @@ import {
     participantSourcesUpdated,
     participantUpdated
 } from '../participants/actions';
-import { getLocalParticipant, getNormalizedDisplayName, getParticipantByIdOrUndefined } from '../participants/functions';
+import { getLocalParticipant, getNormalizedDisplayName, getParticipantByIdOrUndefined, isLocalParticipantColHost } from '../participants/functions';
 import { IJitsiParticipant } from '../participants/types';
 import { toState } from '../redux/functions';
 import {
@@ -708,7 +708,14 @@ export function endpointMessageReceived(participant: Object, data: Object) {
  */
 export function endConference() {
     return async (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
-        const { conference } = getConferenceState(toState(getState));
+        const state = toState(getState);
+
+        // Col-host users cannot end the conference
+        if (isLocalParticipantColHost(state)) {
+            return;
+        }
+
+        const { conference } = getConferenceState(state);
 
         conference?.end();
     };

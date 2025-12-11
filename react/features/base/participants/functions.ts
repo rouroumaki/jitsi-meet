@@ -757,6 +757,37 @@ export function isLocalParticipantModerator(stateful: IStateful) {
 }
 
 /**
+ * Returns true if the participant is a col-host (a moderator granted through
+ * Grant Moderator Rights).
+ *
+ * @param {IParticipant} participant - Participant object.
+ * @returns {boolean}
+ */
+export function isColHost(participant?: IParticipant) {
+    return Boolean(participant?.colHost) && isParticipantModerator(participant);
+}
+
+/**
+ * Returns true if the current local participant is a col-host in the
+ * conference.
+ *
+ * @param {Object|Function} stateful - Object or function that can be resolved
+ * to the Redux state.
+ * @returns {boolean}
+ */
+export function isLocalParticipantColHost(stateful: IStateful) {
+    const state = toState(stateful)['features/base/participants'];
+
+    const { local } = state;
+
+    if (!local) {
+        return false;
+    }
+
+    return isColHost(local);
+}
+
+/**
  * Resolves the first loadable avatar URL for a participant.
  *
  * @param {Object} participant - The participant to resolve avatars for.

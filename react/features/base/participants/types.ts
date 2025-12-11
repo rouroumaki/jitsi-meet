@@ -11,6 +11,7 @@ export enum FakeParticipant {
 export interface IParticipant {
     avatarURL?: string;
     botType?: string;
+    colHost?: boolean;
     conference?: IJitsiConference;
     displayName?: string;
     dominantSpeaker?: boolean;
