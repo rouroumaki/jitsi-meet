@@ -13,13 +13,18 @@ import { getVerticalViewMaxWidth } from '../../../filmstrip/functions.web';
 import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { hideLoadingNotification } from '../../../notifications/actions';
 import { showToolbox } from '../../../toolbox/actions.web';
-import { setSharedIframeState } from '../../actions';
+import { setSharedIframeState, setWebcamVisible } from '../../actions';
 
 interface IProps {
     /**
      * Whether the screen-sharing placeholder should be displayed or not.
      */
     _displayScreenSharingPlaceholder: boolean;
+
+    /**
+     * Whether the webcam is visible.
+     */
+    _webcamVisible: boolean;
 
     /**
      * The available client width.
@@ -122,6 +127,9 @@ class SharedIframe extends Component<IProps> {
                 // 处理操作对话框可见性变化消息，data.show 为 1 表示显示，0 表示隐藏
                 this.props.dispatch(setSharedIframeState({ actionDialogVisible: data.data?.show === 1 }));
                 break;
+            case 'Kloud-ShowWebcamView':
+                this.props.dispatch(setWebcamVisible(true));
+                break;
                 // case 'onkloudjoinmeeting':
                 //     const { iframeUrl } = this.props;
 
@@ -193,15 +201,17 @@ class SharedIframe extends Component<IProps> {
         let width;
         let height;
 
+        const sidebarVisible = this.props._webcamVisible && filmstripVisible;
+
         if ((window as any).interfaceConfig?.VERTICAL_FILMSTRIP) {
-            if (filmstripVisible) {
+            if (sidebarVisible) {
                 width = `${clientWidth - filmstripWidth}px`;
             } else {
                 width = `${clientWidth}px`;
             }
             height = `${clientHeight}px`;
         } else {
-            if (filmstripVisible) {
+            if (sidebarVisible) {
                 height = `${clientHeight - Filmstrip.getFilmstripHeight()}px`;
             } else {
                 height = `${clientHeight}px`;
@@ -292,7 +302,8 @@ function _mapStateToProps(state: IReduxState) {
         isResizing: isResizing || isChatResizing,
         onStage,
         iframeUrl,
-        _displayScreenSharingPlaceholder
+        _displayScreenSharingPlaceholder,
+        _webcamVisible: state['features/shared-iframe'].webcamVisible ?? false
     };
 }
 

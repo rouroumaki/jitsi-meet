@@ -13,7 +13,7 @@ import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { showWarningNotification } from '../../../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE } from '../../../notifications/constants';
 import { shouldDisplayTileView } from '../../../video-layout/functions.any';
-import { toggleSharedIframe } from '../../actions';
+import { setWebcamVisible, toggleSharedIframe } from '../../actions';
 import { isLiveDocShowWithScreenSharing } from '../../functions';
 
 interface IProps extends AbstractButtonProps {
@@ -21,6 +21,7 @@ interface IProps extends AbstractButtonProps {
     _isActive: boolean;
     _mainPanelVisible: boolean;
     _reduxState: IReduxState;
+    _webcamVisible: boolean;
 }
 
 class SharedIframeButton extends AbstractButton<IProps> {
@@ -81,6 +82,9 @@ class SharedIframeButton extends AbstractButton<IProps> {
                 x,
                 y,
             }, '*');
+            if (this.props._webcamVisible) {
+                this.props.dispatch(setWebcamVisible(false));
+            }
         }
     };
 
@@ -145,6 +149,7 @@ function _mapStateToProps(state: IReduxState) {
         _mainPanelVisible: mainPanelVisible,
         _reduxState: state,
         _displayScreenSharingPlaceholder,
+        _webcamVisible: state['features/shared-iframe']?.webcamVisible ?? false,
     };
 }
 

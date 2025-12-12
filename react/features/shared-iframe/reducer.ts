@@ -1,6 +1,6 @@
 import ReducerRegistry from '../base/redux/ReducerRegistry';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE } from './actionTypes';
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE, SET_WEBCAM_VISIBLE } from './actionTypes';
 
 export interface ISharedIframeState {
     actionDialogVisible?: boolean;
@@ -13,6 +13,7 @@ export interface ISharedIframeState {
     ownerId?: string;
     url?: string;
     wasActiveBeforeScreenshare?: boolean;
+    webcamVisible?: boolean;
 }
 
 const DEFAULT_STATE: ISharedIframeState = {
@@ -26,6 +27,7 @@ const DEFAULT_STATE: ISharedIframeState = {
     wasActiveBeforeScreenshare: false,
     isScreenShared: false,
     isWhiteboard: false,
+    webcamVisible: false,
 };
 
 ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = DEFAULT_STATE, action) => {
@@ -54,6 +56,11 @@ ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = 
         };
     case RESET_SHARED_IFRAME_STATE:
         return DEFAULT_STATE;
+    case SET_WEBCAM_VISIBLE:
+        return {
+            ...state,
+            webcamVisible: action.webcamVisible
+        };
     default:
         return state;
     }

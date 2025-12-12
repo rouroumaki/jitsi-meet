@@ -7,6 +7,7 @@ import { toState } from '../base/redux/functions';
 import { getVideoTrackByParticipant } from '../base/tracks/functions.any';
 import { isSpotTV } from '../base/util/spot';
 import { getLargeVideoParticipant } from '../large-video/functions';
+import { shouldDisplayTileView } from '../video-layout/functions.web';
 
 import { MEETING_SERVER_API_BASE_URL } from './apiConstants';
 import { SHARED_IFRAME } from './constants';
@@ -147,4 +148,14 @@ export function isLiveDocShowWithScreenSharing(stateful: IStateful): boolean {
     const _displayScreenSharingPlaceholder = Boolean(isLocalScreenshareOnLargeVideo && !seeWhatIsBeingShared && !isSpotTV(state));
 
     return _displayScreenSharingPlaceholder;
+}
+
+export function isLiveDocShow(stateful: IStateful): boolean {
+    const state = toState(stateful);
+
+    const onStage = getLargeVideoParticipant(state)?.fakeParticipant === FakeParticipant.SharedIframe;
+    const tileView = shouldDisplayTileView(state);
+
+    return (onStage && !tileView) || isLiveDocShowWithScreenSharing(state);
+
 }

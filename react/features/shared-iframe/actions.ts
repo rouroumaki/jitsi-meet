@@ -8,7 +8,7 @@ import { hideLoadingNotification, showErrorNotification, showLoadingNotification
 import { isScreenVideoShared } from '../screen-share/functions';
 import { sendForceStopScreenShare } from '../screen-share/signals';
 
-import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE } from './actionTypes';
+import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_STATE, SET_WAS_ACTIVE_BEFORE_SCREENSHARE, SET_WEBCAM_VISIBLE } from './actionTypes';
 import SharedIframeDialog from './components/web/SharedIframeDialog';
 import { SHARED_IFRAME_STATUSES } from './constants';
 import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
@@ -49,6 +49,13 @@ export function setSharedIframeActive(active: boolean) {
     return {
         type: SET_SHARED_IFRAME_ACTIVE,
         active
+    } as const;
+}
+
+export function setWebcamVisible(webcamVisible: boolean) {
+    return {
+        type: SET_WEBCAM_VISIBLE,
+        webcamVisible
     } as const;
 }
 

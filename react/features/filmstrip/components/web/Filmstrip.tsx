@@ -13,10 +13,12 @@ import { IReduxState, IStore } from '../../../app/types';
 import { isMobileBrowser } from '../../../base/environment/utils';
 import { translate } from '../../../base/i18n/functions';
 import Icon from '../../../base/icons/components/Icon';
-import { IconArrowDown, IconArrowUp } from '../../../base/icons/svg';
+import { IconArrowDown, IconArrowUp, IconLivedoc } from '../../../base/icons/svg';
 import { isNarrowScreenWithChatOpen } from '../../../base/responsive-ui/functions';
 import { getHideSelfView } from '../../../base/settings/functions.any';
 import { registerShortcut, unregisterShortcut } from '../../../keyboard-shortcuts/actions';
+import { setWebcamVisible } from '../../../shared-iframe/actions';
+import { isLiveDocShow } from '../../../shared-iframe/functions';
 import { showToolbox } from '../../../toolbox/actions.web';
 import { isButtonEnabled, isToolboxVisible } from '../../../toolbox/functions.web';
 import { LAYOUTS } from '../../../video-layout/constants';
@@ -121,6 +123,25 @@ function styles(theme: Theme, props: IProps) {
             transition: 'background .2s ease-in-out, right 1s, bottom 1s, top 1s, height .3s ease-in',
             right: 0,
             bottom: 0,
+
+            '.flex-end': {
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                padding: '10px',
+                '.livedoc-icon-box': {
+                    padding: '7px',
+                    borderRadius: '5px',
+                    backgroundColor: '#6547B5',
+                    cursor: 'pointer',
+                    '.livedoc-icon': {
+                        width: '16px',
+                        height: '16px',
+                        color: '#fff',
+                    }
+                }
+
+            },
 
             '&:hover, &:focus-within': {
                 '& .resizable-filmstrip': {
@@ -297,6 +318,11 @@ export interface IProps extends WithTranslation {
     _isFilmstripButtonEnabled: boolean;
 
     /**
+     * Whether the live doc is active.
+     */
+    _isLiveDocShow: boolean;
+
+    /**
      * Whether the available space is when the chat is open. The filmstrip will be hidden if true.
      */
     _isNarrowScreenWithChatOpen: boolean;
@@ -405,6 +431,11 @@ export interface IProps extends WithTranslation {
      * Additional CSS class names to add to the container of all the thumbnails.
      */
     _videosClassName: string;
+
+    /**
+     * Whether or not the webcam is visible.
+     */
+    _webcamVisible: boolean;
 
     /**
      * An object containing the CSS classes.
@@ -590,6 +621,20 @@ class Filmstrip extends PureComponent <IProps, IState> {
             toolbar = this._renderToggleButton();
         }
 
+        const onLiveDocClick = () => {
+            // 获取 iframe 元素
+            const iframe = document.getElementById('sharedIframePlayer') as HTMLIFrameElement;
+
+            if (iframe?.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'Kloud-ShowFilePanel',
+                    Show: 1,
+                }, '*');
+            }
+
+            this.props.dispatch(setWebcamVisible(false));
+        };
+
         const filmstrip = (<>
             <div
                 className = { clsx(this.props._videosClassName,
@@ -598,6 +643,19 @@ class Filmstrip extends PureComponent <IProps, IState> {
                     && !_resizableFilmstrip && 'filmstrip-hover',
                     _verticalViewGrid && 'vertical-view-grid') }
                 id = 'remoteVideos'>
+                {
+                    !tileViewActive && this.props._isLiveDocShow && <div className = 'flex-end'>
+                        <div
+                            className = 'livedoc-icon-box'
+                            onClick = { onLiveDocClick }>
+                            <div className = 'livedoc-icon'>
+                                <IconLivedoc />
+                            </div>
+
+                        </div>
+                    </div>
+                }
+
                 {!_disableSelfView && !_verticalViewGrid && (
                     <div
                         className = 'filmstrip__videos'
@@ -630,6 +688,10 @@ class Filmstrip extends PureComponent <IProps, IState> {
                 }
             </div>
         </>);
+
+        if (this.props._isLiveDocShow && !this.props._webcamVisible) {
+            return <AudioTracksContainer />;
+        }
 
         return (
             <div
@@ -896,24 +958,26 @@ class Filmstrip extends PureComponent <IProps, IState> {
 
         if (_currentLayout === LAYOUTS.TILE_VIEW || _verticalViewGrid || filmstripType !== FILMSTRIP_TYPE.MAIN) {
             return (
-                <FixedSizeGrid
-                    className = 'filmstrip__videos remote-videos'
-                    columnCount = { _columns }
-                    columnWidth = { _thumbnailWidth + TILE_HORIZONTAL_MARGIN }
-                    height = { _filmstripHeight }
-                    initialScrollLeft = { 0 }
-                    initialScrollTop = { 0 }
-                    itemData = {{ filmstripType }}
-                    itemKey = { this._gridItemKey }
-                    onItemsRendered = { this._onGridItemsRendered }
-                    overscanRowCount = { 1 }
-                    rowCount = { _rows }
-                    rowHeight = { _thumbnailHeight + TILE_VERTICAL_MARGIN }
-                    width = { _filmstripWidth }>
-                    {
-                        ThumbnailWrapper
-                    }
-                </FixedSizeGrid>
+                <div>
+                    <FixedSizeGrid
+                        className = 'filmstrip__videos remote-videos'
+                        columnCount = { _columns }
+                        columnWidth = { _thumbnailWidth + TILE_HORIZONTAL_MARGIN }
+                        height = { _filmstripHeight }
+                        initialScrollLeft = { 0 }
+                        initialScrollTop = { 0 }
+                        itemData = {{ filmstripType }}
+                        itemKey = { this._gridItemKey }
+                        onItemsRendered = { this._onGridItemsRendered }
+                        overscanRowCount = { 1 }
+                        rowCount = { _rows }
+                        rowHeight = { _thumbnailHeight + TILE_VERTICAL_MARGIN }
+                        width = { _filmstripWidth }>
+                        {
+                            ThumbnailWrapper
+                        }
+                    </FixedSizeGrid>
+                </div>
             );
         }
 
@@ -1134,7 +1198,9 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         _topPanelVisible,
         _verticalFilmstripWidth: verticalFilmstripWidth.current,
         _verticalViewMaxWidth: getVerticalViewMaxWidth(state),
-        _videosClassName: videosClassName
+        _videosClassName: videosClassName,
+        _isLiveDocShow: isLiveDocShow(state),
+        _webcamVisible: state['features/shared-iframe']?.webcamVisible ?? false,
     };
 }
 
