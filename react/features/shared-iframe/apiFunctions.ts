@@ -1,6 +1,6 @@
 import { doGetJSON } from '../base/util/httpUtils';
 
-import { PEERTIME_API_URL } from './apiConstants';
+import { CHECK_USER_IS_ROOM_OWNER_API_URL, PEERTIME_API_URL } from './apiConstants';
 
 /**
  * 获取用户登录信息.
@@ -30,6 +30,7 @@ export async function getUserLoginInfo(userToken: string): Promise<{ [key: strin
 /**
  * 检查用户是否为房间的owner.
  * 通过比较ClassRoomID和房间号来判断.
+ * 如果roomName不包含字母，则通过API检查RoleInLesson字段.
  *
  * @param {string} roomName - 房间号.
  * @returns {Promise<boolean>} 如果用户是房间owner返回true，否则返回false.
@@ -40,6 +41,39 @@ export async function checkIfUserIsRoomOwner(roomName: string): Promise<boolean>
     }
 
     try {
+        // 检查roomName是否包含字母
+        const containsLetter = /[a-zA-Z]/.test(roomName);
+
+        // 如果不包含字母，调用API检查RoleInLesson
+        if (!containsLetter) {
+            try {
+                const token = window.localStorage.getItem('KloudUserToken') || window.sessionStorage.getItem('UserToken');
+                const apiUrl = `${CHECK_USER_IS_ROOM_OWNER_API_URL}?lessonID=${encodeURIComponent(roomName)}`;
+
+                const options: any = {};
+
+                if (token) {
+                    options.headers = {
+                        UserToken: token
+                    };
+                }
+
+                const result = await doGetJSON(apiUrl, false, options);
+
+                // 检查RoleInLesson字段，如果是2或5，则返回true
+                if (result.RetData && (result.RetData.RoleInLesson === 2 || result.RetData.RoleInLesson === 5)) {
+                    return true;
+                }
+
+                return false;
+            } catch (error) {
+                // API调用失败，降级到原有逻辑
+                console.warn('Failed to check RoleInLesson from API:', error);
+
+                return false;
+            }
+        }
+
         // 先从localStorage获取KloudClassRoomID
         let classRoomID: string | null = window.localStorage.getItem('KloudClassRoomID') || window.sessionStorage.getItem('UserData.ClassRoomID');
 

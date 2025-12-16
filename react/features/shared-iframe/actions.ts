@@ -15,6 +15,7 @@ import { createOrUpdateInstantAccount, sendSharedIframeCommand } from './functio
 
 export function setSharedIframeState(payload: {
     actionDialogVisible?: boolean;
+    annotationPanelVisible?: boolean;
     docToolShow?: boolean;
     isScreenShared?: boolean;
     isWhiteboard?: boolean;

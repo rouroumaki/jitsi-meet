@@ -127,6 +127,10 @@ class SharedIframe extends Component<IProps> {
                 // 处理操作对话框可见性变化消息，data.show 为 1 表示显示，0 表示隐藏
                 this.props.dispatch(setSharedIframeState({ actionDialogVisible: data.data?.show === 1 }));
                 break;
+            case 'showAnnotationPanel':
+                // 处理注释面板显示/隐藏消息，status 为 1 表示显示，0 表示隐藏
+                this.props.dispatch(setSharedIframeState({ annotationPanelVisible: data.status === 1 }));
+                break;
             case 'Kloud-ShowWebcamView':
                 this.props.dispatch(setWebcamVisible(true));
                 break;

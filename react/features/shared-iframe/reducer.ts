@@ -5,6 +5,7 @@ import { RESET_SHARED_IFRAME_STATE, SET_SHARED_IFRAME_ACTIVE, SET_SHARED_IFRAME_
 export interface ISharedIframeState {
     actionDialogVisible?: boolean;
     active?: boolean;
+    annotationPanelVisible?: boolean;
     docToolShow?: boolean;
     isScreenShared?: boolean;
     isWhiteboard?: boolean;
@@ -19,6 +20,7 @@ export interface ISharedIframeState {
 const DEFAULT_STATE: ISharedIframeState = {
     actionDialogVisible: false, // 默认操作对话框隐藏
     active: false,
+    annotationPanelVisible: false, // 默认注释面板隐藏
     docToolShow: false, // 默认 Hide
     livedocInstanceId: undefined,
     mainPanelVisible: false, // 默认主面板隐藏
@@ -36,6 +38,7 @@ ReducerRegistry.register<ISharedIframeState>('features/shared-iframe', (state = 
         return {
             ...state,
             actionDialogVisible: action.actionDialogVisible ?? state.actionDialogVisible,
+            annotationPanelVisible: action.annotationPanelVisible ?? state.annotationPanelVisible,
             ownerId: action.ownerId ?? state.ownerId,
             url: action.url ?? state.url,
             livedocInstanceId: action.livedocInstanceId ?? state.livedocInstanceId,
