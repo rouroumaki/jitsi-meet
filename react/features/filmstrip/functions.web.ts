@@ -665,6 +665,11 @@ export function showGridInVerticalView(state: IReduxState) {
  * @returns {number}
  */
 export function getVerticalViewMaxWidth(state: IReduxState) {
+    const { webcamVisible } = state['features/shared-iframe'];
+
+    if (!webcamVisible) {
+        return 0;
+    }
     const { width } = state['features/filmstrip'];
     const _resizableFilmstrip = isFilmstripResizable(state);
     const _verticalViewGrid = showGridInVerticalView(state);
