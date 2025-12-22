@@ -1,11 +1,13 @@
 import i18next from 'i18next';
 
+import { waitForOwner } from '../../authentication/actions.any';
 import {
     setPrejoinPageVisibility,
     setSkipPrejoinOnReload
 } from '../../prejoin/actions.web';
 import { isPrejoinPageVisible } from '../../prejoin/functions';
 import { iAmVisitor } from '../../visitors/functions';
+import { updateConfig } from '../config/actions';
 import { CONNECTION_DISCONNECTED, CONNECTION_ESTABLISHED } from '../connection/actionTypes';
 import { hangup } from '../connection/actions.web';
 import { JitsiConferenceErrors, JitsiConnectionErrors, browser } from '../lib-jitsi-meet';
@@ -14,7 +16,8 @@ import { MEDIA_TYPE } from '../media/constants';
 import { IGUMPendingState } from '../media/types';
 import MiddlewareRegistry from '../redux/MiddlewareRegistry';
 import { replaceLocalTrack } from '../tracks/actions.any';
-import { getLocalTracks } from '../tracks/functions.any';
+import { getLocalAudioTrack, getLocalTracks } from '../tracks/functions.any';
+import { parseURLParams } from '../util/parseURLParams';
 
 import {
     CONFERENCE_FAILED,
@@ -27,7 +30,6 @@ import { TRIGGER_READY_TO_CLOSE_REASONS } from './constants';
 import logger from './logger';
 
 import './middleware.any';
-import { waitForOwner } from '../../authentication/actions.any';
 
 let screenLock: WakeLockSentinel | undefined;
 
@@ -194,13 +196,49 @@ MiddlewareRegistry.register(store => next => action => {
                 .catch(logger.error);
             });
         } else {
-            promise.then(({ tracks }) => {
+            promise.then(async ({ tracks }) => {
                 let tracksToUse = tracks ?? [];
+                const state = getState();
 
-                if (iAmVisitor(getState())) {
+                if (iAmVisitor(state)) {
                     tracksToUse = [];
                     tracks.forEach(track => track.dispose().catch(logger.error));
                     dispatch(gumPending([ MEDIA_TYPE.AUDIO, MEDIA_TYPE.VIDEO ], IGUMPendingState.NONE));
+                } else {
+                    // Check if joinWithoutAudio is set in URL parameters when prejoin is disabled
+                    const locationURL = state['features/base/connection']?.locationURL;
+
+                    if (locationURL) {
+                        const urlParams = parseURLParams(locationURL);
+                        const joinWithoutAudio = urlParams['config.joinWithoutAudio'];
+
+                        // Support both boolean true and string 'true' values
+                        if (joinWithoutAudio === true || joinWithoutAudio === 'true') {
+                            logger.info('Auto-joining conference without audio from URL parameter (prejoin disabled).');
+
+                            // Set startSilent config
+                            dispatch(updateConfig({
+                                startSilent: true
+                            }));
+
+                            // Remove audio track if it exists
+                            const localTracks = getLocalTracks(state['features/base/tracks']);
+                            const audioTrack = getLocalAudioTrack(localTracks)?.jitsiTrack;
+
+                            if (audioTrack) {
+                                try {
+                                    await dispatch(replaceLocalTrack(audioTrack, null));
+                                } catch (error) {
+                                    logger.error(`Failed to replace local audio with null: ${error}`);
+                                }
+                            }
+
+                            // Filter out audio track from tracksToUse
+                            tracksToUse = tracksToUse.filter((track: any) =>
+                                track && track.getType() !== MEDIA_TYPE.AUDIO
+                            );
+                        }
+                    }
                 }
 
                 dispatch(setInitialGUMPromise());
