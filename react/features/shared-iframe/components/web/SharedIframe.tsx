@@ -13,7 +13,7 @@ import { setFilmstripVisible } from '../../../filmstrip/actions.any';
 import { getVerticalViewMaxWidth } from '../../../filmstrip/functions.web';
 import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { hideLoadingNotification } from '../../../notifications/actions';
-import { hideToolbox, showToolbox } from '../../../toolbox/actions.web';
+import { setOverflowMenuVisible, showToolbox } from '../../../toolbox/actions.web';
 import { setSharedIframeState, setWebcamVisible } from '../../actions';
 import { KLOUD_LIVEDOC_ROLE } from '../../constants';
 
@@ -143,6 +143,10 @@ class SharedIframe extends Component<IProps> {
             case 'Toggle-WebcamView':
                 this.props.dispatch(setFilmstripVisible(data.status === 1));
                 break;
+            case 'Kloud-onMouseClick':
+                // 当 iframe 内部点击时，关闭 overflow menu
+                this.props.dispatch(setOverflowMenuVisible(false));
+                break;
                 // case 'onkloudjoinmeeting':
                 //     const { iframeUrl } = this.props;
 
@@ -153,7 +157,6 @@ class SharedIframe extends Component<IProps> {
                 //         status: SHARED_IFRAME_STATUSES.START,
                 //         url,
                 //     });
-
             default:
                 break;
             }
