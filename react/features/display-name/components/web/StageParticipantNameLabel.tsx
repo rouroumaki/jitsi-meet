@@ -22,6 +22,7 @@ import {
     getStageParticipantTypography,
     scaleFontProperty
 } from './styles';
+import { isLiveDocShow } from '../../../shared-iframe/functions';
 
 interface IOptions {
     clientHeight?: number;
@@ -96,6 +97,11 @@ const StageParticipantNameLabel = () => {
     const visible = useSelector(shouldDisplayStageParticipantBadge);
     const isTileView = useSelector(isLayoutTileView);
     const _isScreenShareParticipant = isScreenShareParticipant(largeVideoParticipant);
+    const _isLiveDocShow = useSelector((state: IReduxState) => isLiveDocShow(state));
+
+    if (_isLiveDocShow) {
+        return null;
+    }
 
     if (visible || (_isScreenShareParticipant && !isTileView)) {
         // For stage participant visibility is true only when the toolbar is visible but we need to keep the element

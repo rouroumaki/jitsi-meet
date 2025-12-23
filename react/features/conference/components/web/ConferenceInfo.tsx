@@ -7,9 +7,8 @@ import { JitsiRecordingConstants } from '../../../base/lib-jitsi-meet';
 import E2EELabel from '../../../e2ee/components/E2EELabel';
 import HighlightButton from '../../../recording/components/Recording/web/HighlightButton';
 import RecordingLabel from '../../../recording/components/web/RecordingLabel';
-import { showToolbox } from '../../../toolbox/actions.web';
-import { isToolboxVisible } from '../../../toolbox/functions.web';
-import VideoQualityLabel from '../../../video-quality/components/VideoQualityLabel.web';
+import { setConferenceInfoVisible, showConferenceInfo } from '../../../toolbox/actions.web';
+import { isConferenceInfoVisible } from '../../../toolbox/functions.web';
 import VisitorsCountLabel from '../../../visitors/components/web/VisitorsCountLabel';
 import ConferenceTimer from '../ConferenceTimer';
 import { getConferenceInfo } from '../functions.web';
@@ -18,7 +17,6 @@ import ConferenceInfoContainer from './ConferenceInfoContainer';
 import InsecureRoomNameLabel from './InsecureRoomNameLabel';
 import RaisedHandsCountLabel from './RaisedHandsCountLabel';
 import SpeakerStatsLabel from './SpeakerStatsLabel';
-import SubjectText from './SubjectText';
 import ToggleTopPanelLabel from './ToggleTopPanelLabel';
 
 /**
@@ -58,10 +56,10 @@ const COMPONENTS: Array<{
         Component: HighlightButton,
         id: 'highlight-moment'
     },
-    {
-        Component: SubjectText,
-        id: 'subject'
-    },
+    // {
+    //     Component: SubjectText,
+    //     id: 'subject'
+    // },
     {
         Component: ConferenceTimer,
         id: 'conference-timer'
@@ -87,10 +85,10 @@ const COMPONENTS: Array<{
         Component: RaisedHandsCountLabel,
         id: 'raised-hands-count'
     },
-    {
-        Component: VideoQualityLabel,
-        id: 'video-quality'
-    },
+    // {
+    //     Component: VideoQualityLabel,
+    //     id: 'video-quality'
+    // },
     {
         Component: VisitorsCountLabel,
         id: 'visitors-count'
@@ -134,7 +132,7 @@ class ConferenceInfo extends Component<IProps> {
      */
     _onTabIn() {
         if (this.props._conferenceInfo.autoHide?.length && !this.props._visible) {
-            this.props.dispatch(showToolbox());
+            this.props.dispatch(showConferenceInfo());
         }
     }
 
@@ -229,7 +227,7 @@ class ConferenceInfo extends Component<IProps> {
  */
 function _mapStateToProps(state: IReduxState) {
     return {
-        _visible: isToolboxVisible(state),
+        _visible: isConferenceInfoVisible(state),
         _conferenceInfo: getConferenceInfo(state),
         _isWhiteboard: state['features/shared-iframe']?.isWhiteboard
     };

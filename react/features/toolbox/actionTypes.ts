@@ -166,3 +166,44 @@ export const TOGGLE_TOOLBOX_VISIBLE = 'TOGGLE_TOOLBOX_VISIBLE';
  * }
  */
 export const SET_TOOLBOX_SHIFT_UP = 'SET_TOOLBOX_SHIFT_UP';
+
+/**
+ * The type of the redux action which sets the timestamp when toolbox was manually hidden.
+ *
+ * {
+ *     type: SET_TOOLBOX_MANUALLY_HIDDEN_TIMESTAMP,
+ *     timestamp: number | null
+ * }
+ */
+export const SET_TOOLBOX_MANUALLY_HIDDEN_TIMESTAMP = 'SET_TOOLBOX_MANUALLY_HIDDEN_TIMESTAMP';
+
+/**
+ * The type of the (redux) action which shows/hides the ConferenceInfo.
+ *
+ * {
+ *     type: SET_CONFERENCE_INFO_VISIBLE,
+ *     visible: boolean
+ * }
+ */
+export const SET_CONFERENCE_INFO_VISIBLE = 'SET_CONFERENCE_INFO_VISIBLE';
+
+/**
+ * The type of the action which clears the ConferenceInfo visibility timeout.
+ *
+ * {
+ *     type: CLEAR_CONFERENCE_INFO_TIMEOUT
+ * }
+ */
+export const CLEAR_CONFERENCE_INFO_TIMEOUT = 'CLEAR_CONFERENCE_INFO_TIMEOUT';
+
+/**
+ * The type of the action which sets a new ConferenceInfo visibility timeout and its
+ * delay.
+ *
+ * {
+ *     type: SET_CONFERENCE_INFO_TIMEOUT,
+ *     handler: Function,
+ *     timeoutMS: number
+ * }
+ */
+export const SET_CONFERENCE_INFO_TIMEOUT = 'SET_CONFERENCE_INFO_TIMEOUT';

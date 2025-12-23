@@ -9,3 +9,9 @@ export const SHARED_IFRAME_STATUSES = {
     SHOW: 'show',
     HIDE: 'hide'
 } as const;
+
+export const KLOUD_LIVEDOC_ROLE = {
+    HOST: 'host',
+    COLHOST: 'colhost',
+    PARTICIPANT: 'participant',
+} as const;

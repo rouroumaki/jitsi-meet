@@ -9,6 +9,7 @@ import { getLargeVideoParticipant } from '../large-video/functions';
 import { hideLoadingNotification, showLoadingNotification } from '../notifications/actions';
 
 import { resetSharedIframeState, setSharedIframeActive, setSharedIframeState } from './actions';
+import { checkIfLivesyncCall } from './apiFunctions';
 import { LIVEDOC_METADATA_KEY, SHARED_IFRAME, SHARED_IFRAME_STATUSES } from './constants';
 import { createLivedocInstance, createOrUpdateInstantAccount, sendSharedIframeCommand } from './functions';
 
@@ -27,36 +28,102 @@ MiddlewareRegistry.register(store => next => action => {
         const existingLivedocInstanceId = existingMetadata?.livedoc?.instanceId;
 
         if (!existingLivedocInstanceId) {
-            // 第一个参与者，创建 livedoc 实例
+            // 第一个参与者，检查是否是 livesyncCall 模式
             (async () => {
                 try {
-                    // 获取或创建用户 token
-                    let localToken = localStorage.getItem('KloudUserToken');
+                    // 获取 roomName
+                    const roomName = conference?.getName();
 
-                    if (!localToken) {
-                        localToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+                    if (!roomName) {
+                        console.warn('Room name not available');
+
+                        return;
                     }
 
-                    // 生成 UUID 作为会议的唯一标识符
-                    const jitsiInstanceId = crypto.randomUUID();
+                    // 检查是否是 livesyncCall 模式
+                    const isLivesyncCall = await checkIfLivesyncCall(roomName);
 
-                    const livedocInstanceId = await createLivedocInstance({
-                        userToken: localToken || '',
-                        jitsiInstanceId
-                    });
+                    if (isLivesyncCall) {
+                        // livesyncCall 模式：使用 roomName 作为 instanceId，立即开启 livedoc iframe
+                        // 获取或创建用户 token
+                        let localToken = localStorage.getItem('KloudUserToken');
 
-                    // 保存到 conference metadata（同时保存 instanceId 与用于追踪的 jitsiInstanceId/UUID）
-                    conference?.getMetadataHandler().setMetadata(LIVEDOC_METADATA_KEY, {
-                        instanceId: livedocInstanceId,
-                        jitsiInstanceId
-                    });
+                        if (!localToken) {
+                            localToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+                        }
 
-                    // 更新到 Redux state
-                    dispatch(setSharedIframeState({
-                        livedocInstanceId,
-                    }));
+                        // 保存到 conference metadata（type = livesyncCall, instanceId = roomName）
+                        conference?.getMetadataHandler().setMetadata(LIVEDOC_METADATA_KEY, {
+                            type: 'livesyncCall',
+                            instanceId: roomName
+                        });
+
+                        // 更新到 Redux state
+                        dispatch(setSharedIframeState({
+                            livedocInstanceId: roomName,
+                        }));
+
+                        // 构建 URL
+                        const url = `https://kloud.cn/GoogleMeet/MainStage/${roomName}/0?token=${localToken}&usetoken=1&fromjitsi=1`;
+
+                        // 添加 livedoc 参与者
+                        dispatch(participantJoined({
+                            conference,
+                            fakeParticipant: FakeParticipant.SharedIframe,
+                            id: 'livedoc',
+                            name: 'Shared Iframe'
+                        }));
+
+                        // 更新 Redux state 的 url 和 status
+                        dispatch(setSharedIframeState({
+                            status: SHARED_IFRAME_STATUSES.START,
+                            ownerId: localParticipant?.id,
+                            url,
+                        }));
+
+                        // 发送命令通知其他人开启 livedoc iframe
+                        sendSharedIframeCommand({
+                            conference,
+                            localParticipantId: localParticipant?.id,
+                            status: SHARED_IFRAME_STATUSES.START,
+                            url: `https://kloud.cn/GoogleMeet/MainStage/${roomName}/0`,
+                            token: localToken || '',
+                            isShow: true,
+                        });
+
+                        // 显示 iframe
+                        dispatch(pinParticipant('livedoc'));
+                        dispatch(setSharedIframeActive(true));
+                    } else {
+                        // 普通模式：创建 livedoc 实例
+                        // 获取或创建用户 token
+                        let localToken = localStorage.getItem('KloudUserToken');
+
+                        if (!localToken) {
+                            localToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+                        }
+
+                        // 生成 UUID 作为会议的唯一标识符
+                        const jitsiInstanceId = crypto.randomUUID();
+
+                        const livedocInstanceId = await createLivedocInstance({
+                            userToken: localToken || '',
+                            jitsiInstanceId
+                        });
+
+                        // 保存到 conference metadata（同时保存 instanceId 与用于追踪的 jitsiInstanceId/UUID）
+                        conference?.getMetadataHandler().setMetadata(LIVEDOC_METADATA_KEY, {
+                            instanceId: livedocInstanceId,
+                            jitsiInstanceId
+                        });
+
+                        // 更新到 Redux state
+                        dispatch(setSharedIframeState({
+                            livedocInstanceId,
+                        }));
+                    }
                 } catch (error) {
-                    console.error('Failed to create livedoc instance:', error);
+                    console.error('Failed to initialize livedoc:', error);
                 }
             })();
         } else {
@@ -70,13 +137,63 @@ MiddlewareRegistry.register(store => next => action => {
     }
     case UPDATE_CONFERENCE_METADATA: {
         const { metadata } = action;
-        const livedocInstanceId = metadata?.livedoc?.instanceId;
+        const livedocMetadata = metadata?.livedoc;
+        const livedocInstanceId = livedocMetadata?.instanceId;
+        const livedocType = livedocMetadata?.type;
 
         if (livedocInstanceId) {
-            dispatch(setSharedIframeState({
-                livedocInstanceId,
-                status: SHARED_IFRAME_STATUSES.START
-            }));
+            // 如果是 livesyncCall 类型，需要自动开启 iframe
+            if (livedocType === 'livesyncCall') {
+                (async () => {
+                    try {
+                        const state = getState();
+                        const localParticipant = getLocalParticipant(state);
+                        const conference = getCurrentConference(state);
+
+                        if (!conference || !localParticipant) {
+                            return;
+                        }
+
+                        // 获取或创建用户 token
+                        let localToken = localStorage.getItem('KloudUserToken');
+
+                        if (!localToken) {
+                            localToken = await createOrUpdateInstantAccount(localParticipant?.name || '');
+                        }
+
+                        // 构建 URL
+                        const url = `https://kloud.cn/GoogleMeet/MainStage/${livedocInstanceId}/0?token=${localToken}&usetoken=1&fromjitsi=1`;
+
+                        // 添加 livedoc 参与者
+                        dispatch(participantJoined({
+                            conference,
+                            fakeParticipant: FakeParticipant.SharedIframe,
+                            id: 'livedoc',
+                            name: 'Shared Iframe'
+                        }));
+
+                        // 更新 Redux state
+                        dispatch(setSharedIframeState({
+                            livedocInstanceId,
+                            status: SHARED_IFRAME_STATUSES.START,
+                            ownerId: localParticipant?.id,
+                            url,
+                        }));
+
+                        // 显示 iframe
+                        dispatch(pinParticipant('livedoc'));
+                        dispatch(setSharedIframeActive(true));
+                    } catch (error) {
+                        console.error('Failed to start livesyncCall iframe:', error);
+                    }
+                })();
+            } else {
+                // 普通模式，只更新 livedocInstanceId
+                dispatch(setSharedIframeState({
+                    livedocInstanceId,
+                    status: SHARED_IFRAME_STATUSES.START
+                }));
+            }
         }
         break;
     }

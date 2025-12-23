@@ -4,9 +4,10 @@ import { isLocalParticipantModerator } from '../base/participants/functions';
 import { showErrorNotification } from '../notifications/actions';
 
 import { CLEAR_SUBTITLE, RECEIVE_REMOTE_SUBTITLE, RECEIVE_STT_STATUS_CHANGED, SET_STT_ENABLED, SET_SUBTITLE_VISIBLE, UPDATE_LOCAL_SUBTITLE } from './actionTypes';
-import { initializeAndStartSTT, isSTTEnabled } from './functions';
+import { getDefaultReadLanguage, getReadLanguages, initializeAndStartSTT, isSTTEnabled, mapLanguageToAPIFormat } from './functions';
 import logger from './logger';
 import { sttSDKManager } from './sdkManager';
+import { detectLanguage, translateText } from './translation';
 import { ISTTSDK } from './types';
 
 /**
@@ -26,24 +27,61 @@ export function setSTTEnabledState(enabled: boolean): any {
 }
 
 /**
- * Updates the local subtitle display.
+ * Updates the local subtitle display with translation logic.
+ * If the detected language is not in the user's read languages, it will be translated.
  *
  * @param {string} participantName - The name of the participant speaking.
  * @param {string} text - The transcribed text.
  * @param {boolean} isInterim - Whether this is an interim (partial) result.
- * @returns {{
- *      type: UPDATE_LOCAL_SUBTITLE,
- *      participantName: string,
- *      text: string,
- *      isInterim: boolean
- * }}
+ * @returns {Function} Thunk action that handles translation and dispatches the update.
  */
 export function updateLocalSubtitle(participantName: string, text: string, isInterim: boolean): any {
-    return {
-        type: UPDATE_LOCAL_SUBTITLE,
-        participantName,
-        text,
-        isInterim
+    return async (dispatch: IStore['dispatch']) => {
+        try {
+            // Get user's read languages and default read language
+            const readLanguages = getReadLanguages();
+            const defaultReadLanguage = getDefaultReadLanguage();
+
+            // Detect the language of the local text
+            const detectedLang = detectLanguage(text);
+            const detectedLangInReadFormat = detectedLang === 'cn' ? 'zh' : detectedLang;
+
+            // Check if detected language is in readLanguages
+            const canRead = readLanguages.includes(detectedLangInReadFormat);
+
+            let finalText = text;
+
+            if (!canRead && detectedLang !== 'auto') {
+                // Need to translate
+                const targetLangId = mapLanguageToAPIFormat(defaultReadLanguage);
+
+                try {
+                    finalText = await translateText(text, targetLangId, detectedLang);
+                    logger.debug('Local subtitle translated', { originalText: text, translatedText: finalText, detectedLang });
+                } catch (translationError) {
+                    logger.error('Translation failed for local subtitle, showing original text:', translationError);
+                    // Fallback to original text if translation fails
+                    finalText = text;
+                }
+            }
+
+            // Dispatch action to update local subtitle display
+            dispatch({
+                type: UPDATE_LOCAL_SUBTITLE,
+                participantName,
+                text: finalText,
+                isInterim
+            });
+        } catch (error) {
+            logger.error('Error processing local subtitle translation:', error);
+            // Fallback to original text on any error
+            dispatch({
+                type: UPDATE_LOCAL_SUBTITLE,
+                participantName,
+                text,
+                isInterim
+            });
+        }
     };
 }
 

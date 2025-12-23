@@ -20,7 +20,7 @@ export interface ISharedIframeState {
 const DEFAULT_STATE: ISharedIframeState = {
     actionDialogVisible: false, // 默认操作对话框隐藏
     active: false,
-    annotationPanelVisible: false, // 默认注释面板隐藏
+    annotationPanelVisible: true, // 默认注释面板显示
     docToolShow: false, // 默认 Hide
     livedocInstanceId: undefined,
     mainPanelVisible: false, // 默认主面板隐藏

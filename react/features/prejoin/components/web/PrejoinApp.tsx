@@ -6,7 +6,9 @@ import { createPrejoinTracks } from '../../../base/tracks/functions.web';
 import GlobalStyles from '../../../base/ui/components/GlobalStyles.web';
 import JitsiThemeProvider from '../../../base/ui/components/JitsiThemeProvider.web';
 import DialogContainer from '../../../base/ui/components/web/DialogContainer';
+import { parseURLParams } from '../../../base/util/parseURLParams';
 import { setupInitialDevices } from '../../../conference/actions.web';
+import { joinConferenceWithoutAudio } from '../../actions.web';
 import { initPrejoin } from '../../functions.web';
 
 import PrejoinThirdParty from './PrejoinThirdParty';

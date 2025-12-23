@@ -18,6 +18,7 @@ import {
     isRemoteTrackMuted
 } from '../base/tracks/functions';
 import { isTrackStreamingStatusActive } from '../connection-indicator/functions';
+import { isLiveDocShow } from '../shared-iframe/functions';
 import { isSharingStatus } from '../shared-video/functions';
 import { LAYOUTS } from '../video-layout/constants';
 import { getCurrentLayout, getNotResponsiveTileViewGridDimensions } from '../video-layout/functions.web';
@@ -667,7 +668,7 @@ export function showGridInVerticalView(state: IReduxState) {
 export function getVerticalViewMaxWidth(state: IReduxState) {
     const { webcamVisible } = state['features/shared-iframe'];
 
-    if (!webcamVisible) {
+    if (!webcamVisible && isLiveDocShow(state)) {
         return 0;
     }
     const { width } = state['features/filmstrip'];

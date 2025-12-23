@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
@@ -5,16 +6,20 @@ import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../app/types';
 import { isMobileBrowser } from '../../../base/environment/utils';
+import Icon from '../../../base/icons/components/Icon';
+import { IconArrowDown, IconArrowUp } from '../../../base/icons/svg';
 import { getLocalParticipant, isLocalParticipantModerator } from '../../../base/participants/functions';
 import ContextMenu from '../../../base/ui/components/web/ContextMenu';
 import { isReactionsButtonEnabled, shouldDisplayReactionsButtons } from '../../../reactions/functions.web';
 import { isCCTabEnabled } from '../../../subtitles/functions.any';
 import { isTranscribing } from '../../../transcribing/functions';
 import {
+    hideToolbox,
     setHangupMenuVisible,
     setOverflowMenuVisible,
     setToolbarHovered,
-    setToolboxVisible
+    setToolboxVisible,
+    showToolbox
 } from '../../actions.web';
 import {
     getJwtDisabledButtons,
@@ -38,12 +43,17 @@ import Separator from './Separator';
 interface IProps {
 
     /**
+     * Whether to show the toggle button for the toolbox.
+     */
+    showToggleButton?: boolean;
+
+    /**
      * Explicitly passed array with the buttons which this Toolbox should display.
      */
     toolbarButtons?: Array<string>;
 }
 
-const useStyles = makeStyles()(() => {
+const useStyles = makeStyles()(theme => {
     return {
         hangupMenu: {
             position: 'relative',
@@ -54,6 +64,44 @@ const useStyles = makeStyles()(() => {
             margin: 0,
             padding: '16px',
             marginBottom: '8px'
+        },
+        toggleToolboxContainer: {
+            display: 'flex',
+            flexWrap: 'nowrap' as const,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(51, 51, 51, .5)',
+            width: '32px',
+            height: '24px',
+            position: 'fixed' as const,
+            borderRadius: '4px',
+            bottom: '80px',
+            left: 'calc(50% - 16px)',
+            opacity: 0,
+            transition: 'opacity .3s, bottom .3s ease-in',
+            zIndex: 253,
+            pointerEvents: 'all' as const,
+
+            '&:hover, &:focus-within': {
+                backgroundColor: theme.palette.ui02
+            }
+        },
+        toggleToolboxButton: {
+            fontSize: '14px',
+            lineHeight: 1.2,
+            textAlign: 'center' as const,
+            background: 'transparent',
+            height: 'auto',
+            width: '100%',
+            padding: 0,
+            margin: 0,
+            border: 'none',
+
+            '-webkit-appearance': 'none',
+
+            '& svg': {
+                fill: theme.palette.icon01
+            }
         }
     };
 });
@@ -65,7 +113,8 @@ const useStyles = makeStyles()(() => {
  * @returns {ReactElement}
  */
 export default function Toolbox({
-    toolbarButtons
+    toolbarButtons,
+    showToggleButton = false
 }: IProps) {
     const { classes, cx } = useStyles();
     const { t } = useTranslation();
@@ -213,6 +262,107 @@ export default function Toolbox({
         dispatch(setToolboxVisible(false));
     }, [ dispatch ]);
 
+    /**
+     * Handler for touch start event of the 'toggle button'.
+     *
+     * @private
+     * @param {Object} e - The synthetic event.
+     * @returns {void}
+     */
+    const onToggleButtonTouch = useCallback((e: React.TouchEvent) => {
+        // Don't propagate the touchStart event so the toolbar doesn't get toggled.
+        e.stopPropagation();
+        if (toolbarVisible) {
+            dispatch(hideToolbox(true));
+        } else {
+            dispatch(showToolbox());
+        }
+    }, [ dispatch, toolbarVisible ]);
+
+    /**
+     * Handler for click event of the 'toggle button'.
+     *
+     * @private
+     * @returns {void}
+     */
+    const onToggleButtonClick = useCallback(() => {
+        if (toolbarVisible) {
+            dispatch(hideToolbox(true));
+        } else {
+            dispatch(showToolbox());
+        }
+    }, [ dispatch, toolbarVisible ]);
+
+    /**
+     * Creates a React Element for changing the visibility of the toolbox when
+     * clicked.
+     *
+     * @private
+     * @returns {ReactElement}
+     */
+    /**
+     * Prevents mouse events from propagating to parent elements.
+     *
+     * @private
+     * @param {Object} e - The synthetic event.
+     * @returns {void}
+     */
+    const onToggleButtonMouseEnter = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+    }, []);
+
+    /**
+     * Prevents mouse events from propagating to parent elements.
+     *
+     * @private
+     * @param {Object} e - The synthetic event.
+     * @returns {void}
+     */
+    const onToggleButtonMouseMove = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+    }, []);
+
+    /**
+     * Prevents mouse events from propagating to parent elements.
+     *
+     * @private
+     * @param {Object} e - The synthetic event.
+     * @returns {void}
+     */
+    const onToggleButtonMouseLeave = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+    }, []);
+
+    const renderToggleButton = useCallback(() => {
+        const icon = toolbarVisible ? IconArrowDown : IconArrowUp;
+        const actions = isMobile
+            ? { onTouchStart: onToggleButtonTouch }
+            : { onClick: onToggleButtonClick };
+
+        return (
+            <div
+                className = { clsx(classes.toggleToolboxContainer, 'toggleToolboxContainer') }
+                onMouseEnter = { onToggleButtonMouseEnter }
+                onMouseLeave = { onToggleButtonMouseLeave }
+                onMouseMove = { onToggleButtonMouseMove }>
+                <button
+                    aria-expanded = { toolbarVisible }
+                    aria-label = { t('toolbar.accessibilityLabel.toggleToolbox') }
+                    className = { classes.toggleToolboxButton }
+                    id = 'toggleToolboxButton'
+                    tabIndex = { 0 }
+                    { ...actions }>
+                    <Icon
+                        aria-label = { t('toolbar.accessibilityLabel.toggleToolbox') }
+                        size = { 24 }
+                        src = { icon } />
+                </button>
+            </div>
+        );
+    }, [ toolbarVisible, isMobile, classes, t, onToggleButtonTouch, onToggleButtonClick, onToggleButtonMouseEnter, onToggleButtonMouseMove, onToggleButtonMouseLeave ]);
+
     if (iAmRecorder || iAmSipGateway) {
         return null;
     }
@@ -243,6 +393,7 @@ export default function Toolbox({
         <div
             className = { cx(rootClassNames, shiftUp && 'shift-up') }
             id = 'new-toolbox'>
+            {showToggleButton && renderToggleButton()}
             <div className = { containerClassName }>
                 <div
                     className = 'toolbox-content-wrapper'

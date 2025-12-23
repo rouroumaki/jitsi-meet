@@ -19,6 +19,7 @@ import { isForceMuted } from '../../participants-pane/functions';
 import { CALLING, INVITED } from '../../presence-status/constants';
 import { RAISE_HAND_SOUND_ID } from '../../reactions/constants';
 import { RECORDING_OFF_SOUND_ID, RECORDING_ON_SOUND_ID } from '../../recording/constants';
+import { KLOUD_LIVEDOC_ROLE } from '../../shared-iframe/constants';
 import { APP_WILL_MOUNT, APP_WILL_UNMOUNT } from '../app/actionTypes';
 import { CONFERENCE_JOINED, CONFERENCE_WILL_JOIN, ENDPOINT_MESSAGE_RECEIVED } from '../conference/actionTypes';
 import { forEachConference, getCurrentConference } from '../conference/functions';
@@ -387,6 +388,15 @@ MiddlewareRegistry.register(store => next => action => {
                     local: true,
                     colHost: true
                 }));
+                // 向iframe发送消息，更新角色
+                const iframe = document.getElementById('sharedIframePlayer') as HTMLIFrameElement;
+
+                if (iframe?.contentWindow) {
+                    iframe.contentWindow.postMessage({
+                        type: 'onRoleChanged',
+                        role: KLOUD_LIVEDOC_ROLE.COLHOST
+                    }, '*');
+                }
             }
         }
         break;

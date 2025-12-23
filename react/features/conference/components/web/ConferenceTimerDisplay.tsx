@@ -9,12 +9,13 @@ const useStyles = makeStyles()(theme => {
         timer: {
             ...withPixelLineHeight(theme.typography.labelRegular),
             color: theme.palette.text01,
-            padding: '6px 8px',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: '6px 12px',
+            // backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backgroundColor: '#000',
             boxSizing: 'border-box',
             height: '28px',
-            borderRadius: `0 ${theme.shape.borderRadius}px ${theme.shape.borderRadius}px 0`,
-            marginRight: '2px',
+            borderRadius: '9999px',
+            marginRight: '10px',
 
             '@media (max-width: 300px)': {
                 display: 'none'

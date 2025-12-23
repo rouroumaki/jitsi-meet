@@ -10,6 +10,7 @@ import ToolboxItem from '../../../base/toolbox/components/ToolboxItem.web';
 import ToolboxButtonWithIcon from '../../../base/toolbox/components/web/ToolboxButtonWithIcon';
 import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { shouldDisplayTileView } from '../../../video-layout/functions.any';
+import { setSharedIframeState } from '../../actions';
 import { isLiveDocShowWithScreenSharing } from '../../functions';
 
 interface IProps extends AbstractButtonProps {
@@ -84,6 +85,8 @@ class LiveDocActionMenuButton extends AbstractButton<IProps> {
      * @returns {void}
      */
     _onIconClick = (e?: React.MouseEvent) => {
+        const { dispatch } = this.props;
+
         if (!e) {
             return;
         }
@@ -92,6 +95,8 @@ class LiveDocActionMenuButton extends AbstractButton<IProps> {
 
         // 计算新的 status 值（toggle）：1 显示，0 隐藏
         const newStatus = _annotationPanelVisible ? 0 : 1;
+
+        dispatch(setSharedIframeState({ annotationPanelVisible: !!newStatus }));
 
         // 获取 iframe 元素
         const iframe = document.getElementById('sharedIframePlayer') as HTMLIFrameElement;

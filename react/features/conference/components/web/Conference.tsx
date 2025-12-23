@@ -22,14 +22,15 @@ import CalleeInfoContainer from '../../../invite/components/callee-info/CalleeIn
 import LargeVideo from '../../../large-video/components/LargeVideo.web';
 import LobbyScreen from '../../../lobby/components/web/LobbyScreen';
 import { getIsLobbyVisible } from '../../../lobby/functions';
-import { getOverlayToRender } from '../../../overlay/functions.web';
 import LoadingNotificationContainer from '../../../notifications/components/web/LoadingNotificationContainer';
+import { getOverlayToRender } from '../../../overlay/functions.web';
 import ParticipantsPane from '../../../participants-pane/components/web/ParticipantsPane';
 import Prejoin from '../../../prejoin/components/web/Prejoin';
 import { isPrejoinPageVisible } from '../../../prejoin/functions.web';
 import ReactionAnimations from '../../../reactions/components/web/ReactionsAnimations';
+import { isLiveDocShow } from '../../../shared-iframe/functions';
 import { toggleToolboxVisible } from '../../../toolbox/actions.any';
-import { fullScreenChanged, showToolbox } from '../../../toolbox/actions.web';
+import { fullScreenChanged, showConferenceInfo, showToolbox } from '../../../toolbox/actions.web';
 import JitsiPortal from '../../../toolbox/components/web/JitsiPortal';
 import Toolbox from '../../../toolbox/components/web/Toolbox';
 import { LAYOUT_CLASSNAMES } from '../../../video-layout/constants';
@@ -74,6 +75,11 @@ interface IProps extends AbstractProps, WithTranslation {
      * Are any overlays visible?
      */
     _isAnyOverlayVisible: boolean;
+
+    /**
+     * Whether the live doc is showing.
+     */
+    _isLiveDocShow: boolean;
 
     /**
      * The CSS class to apply to the root of {@link Conference} to modify the
@@ -169,6 +175,7 @@ class Conference extends AbstractConference<IProps, any> {
         this._onFullScreenChange = this._onFullScreenChange.bind(this);
         this._onVideospaceTouchStart = this._onVideospaceTouchStart.bind(this);
         this._setBackground = this._setBackground.bind(this);
+        this._onShowToolbarWithEvent = this._onShowToolbarWithEvent.bind(this);
     }
 
     /**
@@ -244,7 +251,7 @@ class Conference extends AbstractConference<IProps, any> {
                 <div
                     className = { _layoutClassName }
                     id = 'videoconference_page'
-                    onMouseMove = { isMobileBrowser() ? undefined : this._onShowToolbar }>
+                    onMouseMove = { isMobileBrowser() ? undefined : this._onShowToolbarWithEvent }>
                     { _showPrejoin || _showLobby || <ConferenceInfo /> }
                     <Notice />
                     <div
@@ -268,7 +275,7 @@ class Conference extends AbstractConference<IProps, any> {
                                 role = 'heading'>
                                 { t('toolbar.accessibilityLabel.heading') }
                             </span>
-                            <Toolbox />
+                            <Toolbox showToggleButton = { this.props._isLiveDocShow ? true : false } />
                         </>
                     )}
 
@@ -374,6 +381,33 @@ class Conference extends AbstractConference<IProps, any> {
      */
     _onMouseMove(event: React.MouseEvent) {
         APP.API.notifyMouseMove(event);
+        this._handleConferenceInfoVisibility(event);
+    }
+
+    /**
+     * Handles the visibility of ConferenceInfo based on mouse position.
+     * Shows ConferenceInfo when mouse is in the top center area.
+     *
+     * @param {MouseEvent} event - The mouse event.
+     * @private
+     * @returns {void}
+     */
+    _handleConferenceInfoVisibility(event: React.MouseEvent) {
+        const { clientX, clientY } = event;
+        const windowWidth = window.innerWidth;
+
+        // Define the top area (top 150px) and center area (20% to 80% of width)
+        const topAreaHeight = 150;
+        const centerAreaStart = windowWidth * 0.2;
+        const centerAreaEnd = windowWidth * 0.8;
+
+        const isInTopArea = clientY <= topAreaHeight;
+        const isInCenterArea = clientX >= centerAreaStart && clientX <= centerAreaEnd;
+
+        if (isInTopArea && isInCenterArea) {
+            // Use showConferenceInfo which handles timeout automatically
+            this.props.dispatch(showConferenceInfo());
+        }
     }
 
     /**
@@ -384,6 +418,26 @@ class Conference extends AbstractConference<IProps, any> {
      */
     _onShowToolbar() {
         this.props.dispatch(showToolbox());
+    }
+
+    /**
+     * Handles mouse move event for showing toolbar, but prevents showing
+     * when mouse is in the top area (ConferenceInfo area).
+     *
+     * @param {MouseEvent} event - The mouse event.
+     * @private
+     * @returns {void}
+     */
+    _onShowToolbarWithEvent(event: React.MouseEvent) {
+        const { clientY } = event;
+        const topAreaHeight = 150;
+
+        // Don't show toolbox if mouse is in the top area (ConferenceInfo area)
+        if (clientY <= topAreaHeight) {
+            return;
+        }
+
+        this._onShowToolbar();
     }
 
     /**
@@ -432,7 +486,8 @@ function _mapStateToProps(state: IReduxState) {
         _roomName: getConferenceNameForTitle(state),
         _showLobby: getIsLobbyVisible(state),
         _showPrejoin: isPrejoinPageVisible(state),
-        _showVisitorsQueue: showVisitorsQueue(state)
+        _showVisitorsQueue: showVisitorsQueue(state),
+        _isLiveDocShow: isLiveDocShow(state)
     };
 }
 

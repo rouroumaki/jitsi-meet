@@ -4,13 +4,17 @@ import { isMobileBrowser } from '../base/environment/utils';
 import { isLayoutTileView } from '../video-layout/functions.any';
 
 import {
+    CLEAR_CONFERENCE_INFO_TIMEOUT,
     CLEAR_TOOLBOX_TIMEOUT,
     FULL_SCREEN_CHANGED,
+    SET_CONFERENCE_INFO_TIMEOUT,
+    SET_CONFERENCE_INFO_VISIBLE,
     SET_FULL_SCREEN,
     SET_HANGUP_MENU_VISIBLE,
     SET_OVERFLOW_DRAWER,
     SET_OVERFLOW_MENU_VISIBLE,
     SET_TOOLBAR_HOVERED,
+    SET_TOOLBOX_MANUALLY_HIDDEN_TIMESTAMP,
     SET_TOOLBOX_TIMEOUT
 } from './actionTypes';
 import { setToolboxVisible } from './actions.web';
@@ -101,6 +105,20 @@ export function hideToolbox(force = false) {
                     toolbarTimeout));
         } else {
             dispatch(setToolboxVisible(false));
+            // If force hide, set timestamp to prevent auto-show for a short period
+            if (force) {
+                dispatch({
+                    type: SET_TOOLBOX_MANUALLY_HIDDEN_TIMESTAMP,
+                    timestamp: Date.now()
+                });
+                // Clear the timestamp after 500ms to allow auto-show again
+                setTimeout(() => {
+                    dispatch({
+                        type: SET_TOOLBOX_MANUALLY_HIDDEN_TIMESTAMP,
+                        timestamp: null
+                    });
+                }, 500);
+            }
         }
     };
 }
@@ -137,8 +155,14 @@ export function showToolbox(timeout = 0) {
 
         const {
             enabled,
-            visible
+            visible,
+            manuallyHiddenTimestamp
         } = state['features/toolbox'];
+
+        // Don't auto-show if toolbox was manually hidden recently (within 500ms)
+        if (manuallyHiddenTimestamp && Date.now() - manuallyHiddenTimestamp < 500) {
+            return;
+        }
 
         if (enabled && !visible) {
             dispatch(setToolboxVisible(true));
@@ -266,15 +290,148 @@ export function setToolboxTimeout(handler: Function, timeoutMS: number) {
 }
 
 /**
-     * Closes the overflow menu if opened.
-     *
-     * @private
-     * @returns {void}
-     */
+ * Closes the overflow menu if opened.
+ *
+ * @private
+ * @returns {void}
+ */
 export function closeOverflowMenuIfOpen() {
     return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
         const { overflowMenuVisible } = getState()['features/toolbox'];
 
         overflowMenuVisible && dispatch(setOverflowMenuVisible(false));
+    };
+}
+
+/**
+ * Shows/hides the conference info.
+ *
+ * @param {boolean} visible - True to show the conference info or false to hide it.
+ * @returns {{
+ *     type: SET_CONFERENCE_INFO_VISIBLE,
+ *     visible: boolean
+ * }}
+ */
+export function setConferenceInfoVisible(visible: boolean) {
+    return {
+        type: SET_CONFERENCE_INFO_VISIBLE,
+        visible
+    };
+}
+
+/**
+ * Signals that conference info timeout should be cleared.
+ *
+ * @returns {{
+ *     type: CLEAR_CONFERENCE_INFO_TIMEOUT
+ * }}
+ */
+export function clearConferenceInfoTimeout() {
+    return {
+        type: CLEAR_CONFERENCE_INFO_TIMEOUT
+    };
+}
+
+/**
+ * Dispatches an action which sets new timeout for the conference info visibility and clears the previous one.
+ * On mobile browsers the conference info does not hide on timeout.
+ *
+ * @param {Function} handler - Function to be invoked after the timeout.
+ * @param {number} timeoutMS - Delay.
+ * @returns {{
+ *     type: SET_CONFERENCE_INFO_TIMEOUT,
+ *     handler: Function,
+ *     timeoutMS: number
+ * }}
+ */
+export function setConferenceInfoTimeout(handler: Function, timeoutMS: number) {
+    return function(dispatch: IStore['dispatch']) {
+        if (isMobileBrowser()) {
+            return;
+        }
+
+        dispatch({
+            type: SET_CONFERENCE_INFO_TIMEOUT,
+            handler,
+            timeoutMS
+        });
+    };
+}
+
+/**
+ * Shows the conference info for specified timeout.
+ *
+ * @param {number} timeout - Timeout for showing the conference info.
+ * @returns {Function}
+ */
+export function showConferenceInfo(timeout = 0) {
+    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
+        const state = getState();
+        const { toolbarConfig } = state['features/base/config'];
+        const toolbarTimeout = getToolbarTimeout(state);
+        const initialTimeout = toolbarConfig?.initialTimeout;
+        const alwaysVisible = toolbarConfig?.alwaysVisible;
+
+        const {
+            conferenceInfoVisible,
+            conferenceInfoTimeoutID
+        } = state['features/toolbox'];
+
+        if (!conferenceInfoVisible) {
+            dispatch(setConferenceInfoVisible(true));
+
+            // If the Toolbox is always visible, use the same logic for ConferenceInfo
+            if (!alwaysVisible) {
+                if (typeof initialTimeout === 'number') {
+                    // Use initialTimeout for first show, then use toolbarTimeout
+                    dispatch(
+                        setConferenceInfoTimeout(
+                            () => dispatch(setConferenceInfoVisible(false)),
+                            timeout || initialTimeout));
+                } else {
+                    dispatch(
+                        setConferenceInfoTimeout(
+                            () => dispatch(setConferenceInfoVisible(false)),
+                            timeout || toolbarTimeout));
+                }
+            }
+        } else if (conferenceInfoTimeoutID) {
+            // If already visible, clear existing timeout and set a new one
+            dispatch(clearConferenceInfoTimeout());
+            dispatch(
+                setConferenceInfoTimeout(
+                    () => dispatch(setConferenceInfoVisible(false)),
+                    timeout || toolbarTimeout));
+        }
+    };
+}
+
+/**
+ * Hides the conference info.
+ *
+ * @param {boolean} force - True to force the hiding of the conference info.
+ * @returns {Function}
+ */
+export function hideConferenceInfo(force = false) {
+    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
+        const state = getState();
+        const { toolbarConfig } = state['features/base/config'];
+        const alwaysVisible = toolbarConfig?.alwaysVisible;
+
+        if (alwaysVisible) {
+            return;
+        }
+
+        dispatch(clearConferenceInfoTimeout());
+
+        if (force) {
+            dispatch(setConferenceInfoVisible(false));
+        } else {
+            const toolbarTimeout = getToolbarTimeout(state);
+            dispatch(
+                setConferenceInfoTimeout(
+                    () => dispatch(setConferenceInfoVisible(false)),
+                    toolbarTimeout));
+        }
     };
 }

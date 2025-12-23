@@ -113,3 +113,59 @@ export async function checkIfUserIsRoomOwner(roomName: string): Promise<boolean>
     }
 }
 
+/**
+ * 检查会议是否为 livesyncCall 模式.
+ * 如果roomName不包含字母，则通过API检查Category字段.
+ *
+ * @param {string} roomName - 房间号.
+ * @returns {Promise<boolean>} 如果是livesyncCall模式返回true，否则返回false.
+ */
+export async function checkIfLivesyncCall(roomName: string): Promise<boolean> {
+    if (!roomName || typeof window === 'undefined') {
+        return false;
+    }
+
+    try {
+        // 检查roomName是否包含字母
+        const containsLetter = /[a-zA-Z]/.test(roomName);
+
+        // 如果不包含字母，调用API检查Category
+        if (!containsLetter) {
+            try {
+                const token = window.localStorage.getItem('KloudUserToken') || window.sessionStorage.getItem('UserToken');
+                const apiUrl = `${CHECK_USER_IS_ROOM_OWNER_API_URL}?lessonID=${encodeURIComponent(roomName)}`;
+
+                const options: any = {};
+
+                if (token) {
+                    options.headers = {
+                        UserToken: token
+                    };
+                }
+
+                const result = await doGetJSON(apiUrl, false, options);
+
+                // 检查Category字段，如果是15，则返回true
+                if (result.RetData && result.RetData.Category === 15) {
+                    return true;
+                }
+
+                return false;
+            } catch (error) {
+                // API调用失败，返回false
+                console.warn('Failed to check Category from API:', error);
+
+                return false;
+            }
+        }
+
+        // 如果包含字母，不是livesyncCall模式
+        return false;
+    } catch (error) {
+        // 任何错误都返回false
+        console.warn('Error checking if livesyncCall:', error);
+
+        return false;
+    }
+}
+

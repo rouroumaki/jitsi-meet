@@ -52,6 +52,29 @@ export function isToolboxVisible(state: IReduxState) {
 }
 
 /**
+ * Indicates if the conference info is visible or not.
+ *
+ * @param {IReduxState} state - The state from the Redux store.
+ * @returns {boolean} - True to indicate that the conference info is visible, false -
+ * otherwise.
+ */
+export function isConferenceInfoVisible(state: IReduxState) {
+    const { iAmRecorder, iAmSipGateway, toolbarConfig } = state['features/base/config'];
+    const { alwaysVisible } = toolbarConfig || {};
+    const {
+        conferenceInfoTimeoutID,
+        conferenceInfoVisible
+    } = state['features/toolbox'];
+
+    return Boolean(!iAmRecorder && !iAmSipGateway
+            && (
+                conferenceInfoTimeoutID
+                || conferenceInfoVisible
+                || alwaysVisible
+            ));
+}
+
+/**
  * Indicates if the audio settings button is disabled or not.
  *
  * @param {IReduxState} state - The state from the Redux store.

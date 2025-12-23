@@ -5,12 +5,14 @@ import { IReduxState } from '../app/types';
 import { OVERWRITE_CONFIG, SET_CONFIG, UPDATE_CONFIG } from '../base/config/actionTypes';
 import { NotifyClickButton } from '../base/config/configType';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
-import { iAmVisitor } from '../visitors/functions';
 import { I_AM_VISITOR_MODE } from '../visitors/actionTypes';
+import { iAmVisitor } from '../visitors/functions';
 
 import {
+    CLEAR_CONFERENCE_INFO_TIMEOUT,
     CLEAR_TOOLBOX_TIMEOUT,
     SET_BUTTONS_WITH_NOTIFY_CLICK,
+    SET_CONFERENCE_INFO_TIMEOUT,
     SET_FULL_SCREEN,
     SET_PARTICIPANT_MENU_BUTTONS_WITH_NOTIFY_CLICK,
     SET_TOOLBAR_BUTTONS,
@@ -37,6 +39,30 @@ MiddlewareRegistry.register(store => next => action => {
 
         clearTimeout(timeoutID ?? undefined);
         break;
+    }
+    case CLEAR_CONFERENCE_INFO_TIMEOUT: {
+        const { conferenceInfoTimeoutID } = store.getState()['features/toolbox'];
+
+        clearTimeout(conferenceInfoTimeoutID ?? undefined);
+        break;
+    }
+    case SET_CONFERENCE_INFO_TIMEOUT: {
+        const { dispatch, getState } = store;
+        const { conferenceInfoTimeoutID } = getState()['features/toolbox'];
+
+        clearTimeout(conferenceInfoTimeoutID ?? undefined);
+
+        const timeoutID = window.setTimeout(() => {
+            action.handler();
+            dispatch({
+                type: CLEAR_CONFERENCE_INFO_TIMEOUT
+            });
+        }, action.timeoutMS);
+
+        return next({
+            ...action,
+            timeoutID
+        });
     }
     case UPDATE_CONFIG:
     case OVERWRITE_CONFIG:

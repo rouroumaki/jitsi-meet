@@ -31,6 +31,17 @@ export function setFilmstripEnabled(enabled: boolean) {
  * }}
  */
 export function setFilmstripVisible(visible: boolean) {
+    // 获取 iframe 元素
+    const iframe = document.getElementById('sharedIframePlayer') as HTMLIFrameElement;
+
+    if (iframe?.contentWindow) {
+        // 向 iframe 发送消息
+        iframe.contentWindow.postMessage({
+            type: 'Toggle-WebcamView',
+            status: visible ? 1 : 0
+        }, '*');
+    }
+
     return {
         type: SET_FILMSTRIP_VISIBLE,
         visible

@@ -5,15 +5,17 @@ import { connect } from 'react-redux';
 import Filmstrip from '../../../../../modules/UI/videolayout/Filmstrip';
 import { IReduxState } from '../../../app/types';
 import { VIDEO_TYPE } from '../../../base/media/constants';
-import { getLocalParticipant } from '../../../base/participants/functions';
+import { getLocalParticipant, isLocalParticipantColHost, isLocalParticipantModerator } from '../../../base/participants/functions';
 import { FakeParticipant } from '../../../base/participants/types';
 import { getVideoTrackByParticipant } from '../../../base/tracks/functions.any';
 import { isSpotTV } from '../../../base/util/spot';
+import { setFilmstripVisible } from '../../../filmstrip/actions.any';
 import { getVerticalViewMaxWidth } from '../../../filmstrip/functions.web';
 import { getLargeVideoParticipant } from '../../../large-video/functions';
 import { hideLoadingNotification } from '../../../notifications/actions';
-import { showToolbox } from '../../../toolbox/actions.web';
+import { hideToolbox, showToolbox } from '../../../toolbox/actions.web';
 import { setSharedIframeState, setWebcamVisible } from '../../actions';
+import { KLOUD_LIVEDOC_ROLE } from '../../constants';
 
 interface IProps {
     /**
@@ -102,7 +104,7 @@ class SharedIframe extends Component<IProps> {
 
             // 处理不同类型的消息
             switch (data.type) {
-            case 'mousemove':
+            case 'Kloud-onBottomAreaMouseMove':
                 this.props.dispatch(showToolbox());
                 break;
             case 'onkloudloaded':
@@ -133,6 +135,13 @@ class SharedIframe extends Component<IProps> {
                 break;
             case 'Kloud-ShowWebcamView':
                 this.props.dispatch(setWebcamVisible(true));
+                break;
+            case 'Kloud-HideWebcamView':
+                this.props.dispatch(setWebcamVisible(false));
+                break;
+
+            case 'Toggle-WebcamView':
+                this.props.dispatch(setFilmstripVisible(data.status === 1));
                 break;
                 // case 'onkloudjoinmeeting':
                 //     const { iframeUrl } = this.props;
@@ -296,6 +305,12 @@ function _mapStateToProps(state: IReduxState) {
 
         iframeUrl = `https://kloud.cn/GoogleMeet/MainStage/${livedocInstanceId}/0?token=${localToken}&usetoken=1&fromjitsi=1`;
     }
+
+    const isHost = isLocalParticipantModerator(state);
+    const isColHost = isLocalParticipantColHost(state);
+    const role = isHost ? KLOUD_LIVEDOC_ROLE.HOST : isColHost ? KLOUD_LIVEDOC_ROLE.COLHOST : KLOUD_LIVEDOC_ROLE.PARTICIPANT;
+
+    iframeUrl = `${iframeUrl}&role=${role}`;
 
     return {
         clientHeight,

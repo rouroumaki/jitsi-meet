@@ -134,7 +134,7 @@ async function _handleTokenAutoLogin({ dispatch, getState }: IStore) {
     }
 
     // 直接从URL的searchParams中获取token，避免parseURLParams的JSON解析问题
-    const token = locationURL.searchParams?.get('token');
+    const token = locationURL.searchParams?.get('token') || window.sessionStorage.getItem('UserToken');
 
     if (!token || typeof token !== 'string') {
         return;
@@ -152,12 +152,20 @@ async function _handleTokenAutoLogin({ dispatch, getState }: IStore) {
     try {
         const userInfo = await getUserLoginInfo(token);
         const userName = userInfo.Name;
+        const avatarUrl = userInfo.AvatarURL;
         const classRoomID = userInfo.ClassRoomID;
 
         if (classRoomID) {
             window.localStorage.setItem('KloudClassRoomID', classRoomID);
             dispatch(updateSettings({
                 classRoomID
+            }));
+        }
+
+        if (avatarUrl) {
+            window.localStorage.setItem('KloudAvatarURL', avatarUrl);
+            dispatch(updateSettings({
+                avatarURL: avatarUrl
             }));
         }
 
